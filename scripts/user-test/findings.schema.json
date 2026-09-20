@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PersonaRun",
+  "type": "object",
+  "required": ["persona", "name", "context", "tasks"],
+  "properties": {
+    "persona": { "type": "string", "pattern": "^P[0-9]{2}$" },
+    "name": { "type": "string" },
+    "context": {
+      "type": "object",
+      "required": ["viewport", "input"],
+      "properties": {
+        "viewport": { "type": "string" },
+        "locale": { "type": "string" },
+        "network": { "type": "string" },
+        "zoom": { "type": "number" },
+        "input": { "type": "string", "enum": ["mouse", "keyboard", "screen-reader", "touch"] }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "goal", "status", "steps", "friction_avg", "quote"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "goal": { "type": "string" },
+          "status": { "type": "string", "enum": ["completed", "partial", "abandoned"] },
+          "steps": { "type": "integer" },
+          "time_to_first_value_s": { "type": ["integer", "null"] },
+          "friction_avg": { "type": "number" },
+          "dead_ends": { "type": "array", "items": { "type": "string" } },
+          "top_frustrations": { "type": "array", "items": { "type": "string" } },
+          "quote": { "type": "string" },
+          "step_log": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["step", "intent", "action", "result", "friction"],
+              "properties": {
+                "step": { "type": "integer" },
+                "intent": { "type": "string" },
+                "found_via": { "type": "string" },
+                "action": { "type": "string" },
+                "result": { "type": "string" },
+                "screenshot": { "type": "string" },
+                "friction": { "type": "integer", "minimum": 0, "maximum": 3 },
+                "note": { "type": "string" }
+              }
+            }
+          },
+          "attacks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["attack_id", "group", "target", "did", "expected", "actual", "severity", "reproduced"],
+              "properties": {
+                "attack_id": { "type": "string", "pattern": "^A[0-9]{2}$" },
+                "group": { "type": "string" },
+                "target": { "type": "string" },
+                "did": { "type": "string" },
+                "expected": { "type": "string" },
+                "actual": { "type": "string" },
+                "severity": { "type": "string", "enum": ["S0", "S1", "S2", "S3"] },
+                "reproduced": { "type": "boolean" },
+                "pass": { "type": "string", "enum": ["desktop", "mobile", "network"] },
+                "screenshot": { "type": "string" },
+                "fix": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page", "issue", "severity"],
+        "properties": {
+          "page": { "type": "string" },
+          "issue": { "type": "string" },
+          "severity": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
+          "evidence": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+node_modules/
+metrics/
+artifacts/
+axe/
+shots/
+.env*
+*.log
+.DS_Store
+dist/
+build/
+.next/
+coverage/
+playwright-report/
+test-results/
+.playwright/

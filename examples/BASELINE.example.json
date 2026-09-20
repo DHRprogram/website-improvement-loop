@@ -1,0 +1,55 @@
+{
+  "tag": "2026-09-20",
+  "saved_at": "2026-09-20T10:00:00.000Z",
+  "git_sha": "abc1234",
+  "friction": {
+    "overall_avg": 0.42,
+    "per_persona": {
+      "P01": 0.33,
+      "P02": 0.50,
+      "P03": 0.80,
+      "P04": 1.20,
+      "P05": 0.10,
+      "P06": 0.60,
+      "P07": 0.20,
+      "P08": 0.90,
+      "P09": 0.30,
+      "P10": 0.40,
+      "P11": 2.50,
+      "P12": 0.00
+    },
+    "total_steps": 87
+  },
+  "issues": {
+    "P0": 1,
+    "P1": 3,
+    "P2": 8,
+    "P3": 12
+  },
+  "attacks": {
+    "total": 40,
+    "by_severity": { "S0": 1, "S1": 3, "S2": 5, "S3": 8 },
+    "reproduced": 30,
+    "flaky": 10,
+    "by_group": [
+      { "group": "Input abuse", "count": 8 },
+      { "group": "Click abuse", "count": 8 },
+      { "group": "Keyboard & focus chaos", "count": 7 },
+      { "group": "State & refresh", "count": 7 },
+      { "group": "Navigation & discovery", "count": 6 },
+      { "group": "Network & timing", "count": 4 }
+    ]
+  },
+  "a11y": {
+    "total": 15,
+    "by_severity": { "P0": 0, "P1": 2, "P2": 8, "P3": 5 },
+    "by_rule": { "color-contrast": 5, "image-alt": 3, "label": 2, "heading-order": 2, "list": 1, "region": 1, "bypass": 1 }
+  },
+  "issue_keys": [
+    "signup::phone-number-field-required",
+    "checkout::double-click-submit-causes",
+    "signup::no-field-level-validation-errors",
+    "search::no-results-empty-state-missing",
+    "pricing::table-not-responsive-on-mobile"
+  ]
+}
