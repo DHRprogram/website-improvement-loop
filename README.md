@@ -1,42 +1,34 @@
 # Website Improvement Loop
 
-A Claude Code skill that audits your website codebase, improves it over 10 measurable iterations, runs 12 synthetic users through Chrome, ideates and pitches product features, and builds them to a strict quality bar.
+A Claude Code skill that audits, improves, tests, and builds websites — with 25 enhancements including synthetic user testing, adversarial attacks, accessibility audits, and a regression guard.
 
-## What It Does
+## Quick Install
 
-- **Phase A** — 10 iterations of codebase improvement with before/after metrics
-- **Phase B** — 12 synthetic user tests via Chrome (10 demographic personas + adversarial chaos tester + axe-core accessibility auditor)
-- **Phase C** — Product feature ideation (15–25 ideas → 8–12 pitches)
-- **Phase D** — User approval gate
-- **Phase E** — Build approved ideas to Product Quality Bar
-- **Regression Guard** — CI gate preventing metric degradation
-
-## Who Is It For
-
-Developers who want to systematically improve a website: fix bugs, find UX issues, test accessibility, and turn an MVP into a real product.
-
-## Prerequisites
-
-- Node.js 18+
-- Playwright (`npx playwright install --with-deps chromium`)
-- Chrome DevTools MCP or Playwright MCP configured in your Claude Code MCP servers
-
-## Installation
-
+**One command:**
 ```bash
-# Copy this skill to your Claude Code skills directory
-cp -r skills/website-improvement-loop ~/.claude/skills/
+curl -fsSL https://raw.githubusercontent.com/DHRprogram/website-improvement-loop/main/install.sh | bash
 ```
 
-Or symlink:
+**Manual:**
 ```bash
-ln -s $(pwd)/skills/website-improvement-loop ~/.claude/skills/
+# 1. Clone the skill
+git clone https://github.com/DHRprogram/website-improvement-loop.git ~/.claude/skills/website-improvement-loop
+
+# 2. Symlink the slash command
+mkdir -p ~/.claude/commands
+ln -sf ~/.claude/skills/website-improvement-loop/commands/improve-site.md ~/.claude/commands/improve-site.md
+
+# 3. Install dependencies
+cd ~/.claude/skills/website-improvement-loop
+npm install --no-audit --no-fund
+
+# 4. (Optional) Add MCP config for browser testing
+# Add to ~/.claude/settings.json or .claude/settings.json:
 ```
 
-## MCP Configuration
+## MCP Setup (Required for Phase B)
 
-Add to your `~/.claude/settings.json` or project `.claude/settings.json`:
-
+Add to your settings:
 ```json
 {
   "mcpServers": {
@@ -52,104 +44,55 @@ Add to your `~/.claude/settings.json` or project `.claude/settings.json`:
 }
 ```
 
-A sample `.mcp.json` is included in the skill directory.
-
 ## Usage
 
-Invoke the skill in Claude Code:
+1. Open Claude Code in your project directory
+2. Run `/improve-site`
+3. Answer the 4 setup questions
+4. The skill runs automatically through all 5 phases
+
+## What It Does
+
+| Phase | Description |
+|-------|-------------|
+| **A** — Improve | 10 iterations of codebase improvement with before/after scoring |
+| **B** — Test | 12 synthetic personas through Chrome (10 demographic + adversarial + a11y) |
+| **C** — Ideate | 15–25 product ideas, distilled to 8–12 pitches with ROI ranking |
+| **D** — Approve | User reviews pitches and selects what to build |
+| **E** — Build | Builds approved ideas to Product Quality Bar |
+
+## Features
+
+- 25 enhancements: `--fast`, `--parallel N`, `--dry-run`, `--ghost`, `--spotlight`, `--budget`, `--resume`
+- Regression Guard: prevents metric degradation across builds
+- CI integration via GitHub Actions (copy `examples/github-workflow.yml`)
+- HTML report with Chart.js visualizations
+- Slack/Telegram webhooks for P0 alerts
+- Multi-project baseline support
+- Auto-revert on score regression
+
+## Files
 
 ```
-/improve-site
+39 files in the skill directory:
+  SKILL.md, README.md, LICENSE, CHANGELOG.md, .gitignore, package.json, .mcp.json, install.sh
+  commands/improve-site.md
+  scripts/measure.sh, scripts/trend-chart.mjs, scripts/init.mjs, scripts/html-report.mjs
+  scripts/dedup-findings.mjs, scripts/changelog-gen.mjs, scripts/visual-diff.mjs, scripts/form-fuzzer.mjs, scripts/cron-check.sh
+  scripts/ci/regression-gate.sh
+  scripts/user-test/aggregate-findings.mjs, run-axe.mjs, baseline-save.mjs, baseline-check.mjs, findings.schema.json
+  references/ (10 files)
+  examples/ (4 files)
+  checkpoints/
 ```
 
-Or run phases manually:
+## Uninstall
 
 ```bash
-# Phase A — measure baseline
-bash skills/website-improvement-loop/scripts/measure.sh baseline
-
-# Phase B — run accessibility audit
-node skills/website-improvement-loop/scripts/user-test/run-axe.mjs https://example.com / /about /contact
-
-# Aggregate findings
-node skills/website-improvement-loop/scripts/user-test/aggregate-findings.mjs
-
-# Save baseline
-node skills/website-improvement-loop/scripts/user-test/baseline-save.mjs
-
-# Check regression
-node skills/website-improvement-loop/scripts/user-test/baseline-check.mjs
+rm -rf ~/.claude/skills/website-improvement-loop
+rm -f ~/.claude/commands/improve-site.md
 ```
-
-## Regression Guard & CI
-
-Add the workflow file `.github/workflows/regression.yml` to your project:
-
-```yaml
-# See the file in this skill for full configuration
-```
-
-Set repository secrets:
-- `STAGING_URL` — your staging environment URL
-
-The regression gate runs every PR and blocks merges if metrics degrade.
-
-## Directory Structure
-
-```
-skills/website-improvement-loop/
-├── SKILL.md                    # Skill definition
-├── README.md                   # This file
-├── LICENSE                     # MIT License
-├── CHANGELOG.md               # Keep a Changelog format
-├── .gitignore
-├── package.json
-├── .mcp.json                   # Sample MCP config
-├── scripts/
-│   ├── measure.sh             # Metrics snapshot
-│   ├── user-test/
-│   │   ├── aggregate-findings.mjs  # Findings aggregation
-│   │   ├── run-axe.mjs            # Accessibility audit
-│   │   ├── baseline-save.mjs      # Save regression baseline
-│   │   ├── baseline-check.mjs     # Check regression
-│   │   └── findings.schema.json   # JSON Schema for findings
-│   └── ci/
-│       └── regression-gate.sh     # CI regression gate
-├── references/
-│   ├── misuse-checklist.md
-│   ├── ideas.md
-│   ├── idea-pitch-format.md
-│   ├── product-quality-bar.md
-│   ├── personas.md
-│   ├── user-test-protocol.md
-│   ├── adversarial-playbook.md
-│   ├── a11y-audit.md
-│   └── final-report-template.md
-├── examples/
-│   ├── persona-01.example.json
-│   ├── persona-11.example.json
-│   └── BASELINE.example.json
-└── .mcp.json
-```
-
-
-## Post-Install
-
-
 
 ## License
 
-MIT. See LICENSE file.
-
-## Contributing
-
-Before submitting PRs, run verification:
-
-```bash
-cd skills/website-improvement-loop
-npm run verify
-```
-
-This runs all 12 validation checks: JSON parse, bash syntax, Node syntax, YAML validation, and secret scanning.
-
-[CHANGELOG.md](CHANGELOG.md) | [Issues](https://github.com/USER/website-improvement-loop/issues)
+MIT
