@@ -1,0 +1,16 @@
+[
+  {
+    "rule": "color-contrast",
+    "target": ".brand-header",
+    "route": "/about",
+    "reason": "Brand colour on non-text element",
+    "expiry": "2026-12-21"
+  },
+  {
+    "rule": "heading-order",
+    "target": "h2.sidebar-heading",
+    "route": "/docs",
+    "reason": "Sidebar heading level follows design system",
+    "expiry": "2026-12-21"
+  }
+]
