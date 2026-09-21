@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.next/
+build/
+artifacts/
+*.log
+.env
+.env.local
+.env.production
+coverage/
+.nyc_output/
+*.tsbuildinfo
+.artifacts/
+MCPEND

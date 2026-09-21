@@ -1,0 +1,8 @@
+{
+  "hst_id": "HST-01",
+  "route": "/dashboard",
+  "trigger_reason": "Golden test visual diff > 5% after 3 self-heal attempts",
+  "actions_taken": ["feature_flag_flip_off", "git_revert_HEAD"],
+  "rolled_back_at": "2026-09-21T15:30:00Z",
+  "verification": "Old code handling traffic, golden test passes against old code"
+}

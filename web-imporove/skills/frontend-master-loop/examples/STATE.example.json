@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "mode": "strangler",
+  "status": "running",
+  "branch": "redesign/strangler/2026-09-21-1200",
+  "phases": {
+    "P0": { "status": "complete", "completed_at": "2026-09-21T12:02:00Z" },
+    "P1": { "status": "complete", "completed_at": "2026-09-21T12:05:00Z" },
+    "R0": { "status": "complete", "completed_at": "2026-09-21T12:10:00Z" },
+    "R1": { "status": "complete", "completed_at": "2026-09-21T12:30:00Z" },
+    "R2": { "status": "complete", "completed_at": "2026-09-21T13:00:00Z" },
+    "R3": { "status": "complete", "completed_at": "2026-09-21T13:15:00Z" },
+    "R4": { "status": "complete", "completed_at": "2026-09-21T14:00:00Z" },
+    "R5": { "status": "in_progress", "started_at": "2026-09-21T14:05:00Z" }
+  },
+  "current_phase": "R5",
+  "completed_phases": ["P0", "P1", "R0", "R1", "R2", "R3", "R4"],
+  "start_time": "2026-09-21T12:00:00Z",
+  "hst_fired": null,
+  "iterations": 0,
+  "last_checkpoint": 4
+}

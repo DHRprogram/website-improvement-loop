@@ -1,0 +1,12 @@
+{
+  "routes": [
+    { "path": "/dashboard", "methods": ["GET"], "auth": "required", "components": ["Sidebar", "MetricCard", "DataTable"] },
+    { "path": "/profile", "methods": ["GET", "PUT"], "auth": "required", "components": ["ProfileForm", "AvatarUpload"] }
+  ],
+  "api_endpoints": [
+    { "path": "/api/metrics", "method": "GET", "response": "{ total: number, active: number }" }
+  ],
+  "design_tokens": { "colors": ["--primary: #1a1a2e", "--secondary: #16213e"], "spacing": ["--space-4: 1rem"] },
+  "i18n_locales": ["en", "fr"],
+  "analytics_events": ["page_view", "button_click", "form_submit"]
+}

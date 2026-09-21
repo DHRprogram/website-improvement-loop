@@ -1,0 +1,12 @@
+{
+  "approved_at": "2026-09-21T12:00:00Z",
+  "approved_by": "user",
+  "locked": true,
+  "sections": {
+    "scope": { "mode": "strangler", "routes_in": ["/", "/dashboard", "/profile", "/settings"], "routes_out": ["/admin"], "locales": ["en", "fr"] },
+    "constraints": { "staging_db_url_available": true, "backup_target_confirmed": true, "flag_provider": "unleash", "apm_stack": "otel", "status_page_url": "https://status.example.com", "cicd": "github-actions" },
+    "budgets": { "max_cost_delta_pct": 20, "max_downtime_min": 0, "error_budget_pct": 25, "error_budget_confirmed": true },
+    "autonomy": { "authorized": true, "hst_acknowledged": true, "canary_consent": true, "auto_cleanup": true },
+    "risk_ack": { "migrations_not_auto_run": true, "cutover_paced": true, "phases_reversible": true }
+  }
+}

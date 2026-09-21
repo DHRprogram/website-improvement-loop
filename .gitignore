@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.next/
+build/
+artifacts/
+*.log
+.env
+.env.local
+.env.production
+coverage/
+.nyc_output/
+*.tsbuildinfo
+db.sqlite3
+__pycache__/
+*.pyc
+.DS_Store

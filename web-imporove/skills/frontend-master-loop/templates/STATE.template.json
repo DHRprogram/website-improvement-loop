@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "mode": "<mode>",
+  "status": "initialized",
+  "branch": "redesign/<mode>/<timestamp>",
+  "phases": {},
+  "current_phase": null,
+  "completed_phases": [],
+  "start_time": "<timestamp>",
+  "end_time": null,
+  "hst_fired": null,
+  "iterations": 0,
+  "last_checkpoint": 0
+}

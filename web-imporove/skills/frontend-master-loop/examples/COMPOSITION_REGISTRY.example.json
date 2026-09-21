@@ -1,0 +1,16 @@
+{
+  "scanned_at": "2026-09-21T12:05:00Z",
+  "total_assets": 5,
+  "phases_mapped": {
+    "R1": { "primary": { "id": "preservation-capture", "kind": "node_script", "path": "skills/frontend-master-loop/scripts/preservation-capture.mjs" }, "fallback": { "id": "A11", "kind": "agent", "path": "agents/A11-preservation.md" } },
+    "R4": { "primary": { "id": "golden-test-runner", "kind": "node_script", "path": "skills/frontend-master-loop/scripts/golden-test-runner.mjs" }, "fallback": { "id": "A17", "kind": "agent", "path": "agents/A17-golden-tests.md" } },
+    "R9": { "primary": { "id": "canary", "kind": "node_script", "path": "skills/frontend-master-loop/scripts/canary.mjs" }, "fallback": { "id": "A19", "kind": "agent", "path": "agents/A19-cutover-rollback.md" } }
+  },
+  "assets": [
+    { "id": "preservation-capture", "kind": "node_script", "path": "skills/frontend-master-loop/scripts/preservation-capture.mjs", "description": "Capture route screenshots and metrics", "inputs": ["routes", "base-url"], "outputs": ["screenshots", "metrics"], "callable_via": "node" },
+    { "id": "golden-test-runner", "kind": "node_script", "path": "skills/frontend-master-loop/scripts/golden-test-runner.mjs", "description": "Run golden tests against routes", "inputs": ["routes"], "outputs": ["test-results"], "callable_via": "node" },
+    { "id": "canary", "kind": "node_script", "path": "skills/frontend-master-loop/scripts/canary.mjs", "description": "Paced canary rollout 1-100%", "inputs": ["traffic-percent"], "outputs": ["canary-log"], "callable_via": "node" },
+    { "id": "rollback", "kind": "node_script", "path": "skills/frontend-master-loop/scripts/rollback.mjs", "description": "Rollback a route or HST", "inputs": ["route", "hst-id"], "outputs": ["rollback-report"], "callable_via": "node" },
+    { "id": "no-prod-touch", "kind": "bash_script", "path": "skills/frontend-master-loop/scripts/guards/no-prod-touch.sh", "description": "Guard against production access", "inputs": [], "outputs": ["exit-code"], "callable_via": "bash" }
+  ]
+}

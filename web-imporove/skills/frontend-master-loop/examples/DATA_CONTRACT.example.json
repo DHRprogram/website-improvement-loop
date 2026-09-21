@@ -1,0 +1,10 @@
+{
+  "frozen_at": "2026-09-21T13:15:00Z",
+  "tables": [
+    { "name": "users", "columns": [{ "name": "id", "type": "uuid", "pk": true }, { "name": "email", "type": "text", "nullable": false }] }
+  ],
+  "api_endpoints": [
+    { "path": "/api/users", "method": "GET", "request": {}, "response": { "type": "array", "items": { "type": "User" } } }
+  ],
+  "rules": ["No column may be dropped", "No nullable column may become non-nullable without review", "No new table may be added outside scope"]
+}

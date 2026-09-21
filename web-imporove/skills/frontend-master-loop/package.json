@@ -1,0 +1,22 @@
+{
+  "name": "frontend-master-loop",
+  "version": "1.0.0",
+  "description": "Master frontend redesign loop with up-front approval harvest, cross-skill composition, and autonomous execution until completion. Stops only on Hard Stop Triggers.",
+  "type": "module",
+  "scripts": {
+    "verify": "node scripts/run-frontend-loop.mjs --dry-run",
+    "harvest": "node scripts/approval-harvest.mjs --print",
+    "scan": "node scripts/composition-scan.mjs",
+    "test:preservation": "node scripts/preservation-capture.mjs --dry-run",
+    "test:golden": "node scripts/golden-test-runner.mjs --dry-run",
+    "test:rollback": "node scripts/rollback.mjs --dry-run",
+    "test:canary": "node scripts/canary.mjs --dry-run",
+    "lint:json": "node -e \"const fs=require('fs');const g=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?g(d+'/'+e.name):[d+'/'+e.name]);g('.').filter(f=>f.endsWith('.json')).forEach(f=>JSON.parse(fs.readFileSync(f)))\"",
+    "lint:bash": "find scripts -name '*.sh' -exec bash -n {} +",
+    "lint:node": "find scripts -name '*.mjs' -exec node --check {} +",
+    "test": "npm run lint:json && npm run lint:bash && npm run lint:node && npm run verify"
+  },
+  "keywords": ["claude-code", "redesign", "migration", "strangler", "multi-agent", "autonomous"],
+  "license": "MIT",
+  "engines": { "node": ">=18" }
+}

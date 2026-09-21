@@ -1,0 +1,12 @@
+{
+  "route": "/dashboard",
+  "state": "migrated",
+  "flag": "redesign/route-dashboard",
+  "golden_test_pass": true,
+  "a11y_pass": true,
+  "seo_pass": true,
+  "i18n_pass": true,
+  "analytics_pass": true,
+  "integrations_pass": true,
+  "migrated_at": "2026-09-21T15:00:00Z"
+}

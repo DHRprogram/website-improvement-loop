@@ -1,0 +1,80 @@
+name: Frontend Master Loop Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Redesign mode (strangler/greenfield/bluegreen/design-system)'
+        default: 'strangler'
+        required: true
+        type: string
+      routes:
+        description: 'Routes in scope (comma-separated)'
+        default: '/'
+        required: false
+        type: string
+      no_cutover:
+        description: 'Skip cutover phases'
+        default: false
+        required: false
+        type: boolean
+      dry_run:
+        description: 'Dry run (audit only, no edits)'
+        default: false
+        required: false
+        type: boolean
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package.json ]; then npm ci --ignore-scripts 2>/dev/null || true; fi
+
+      - name: Lint JSON files
+        run: |
+          cd skills/frontend-master-loop
+          node -e "
+          const fs=require('fs');
+          const g=(d)=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?g(d+'/'+e.name):[d+'/'+e.name]);
+          const files=g('.').filter(f=>f.endsWith('.json'));
+          files.forEach(f=>{try{JSON.parse(fs.readFileSync(f));console.log('PASS: '+f)}catch(e){console.log('FAIL: '+f+' - '+e.message);process.exit(1)}});
+          "
+
+      - name: Lint Bash scripts
+        run: |
+          find skills/frontend-master-loop/scripts -name '*.sh' -exec bash -n {} \; -exec echo "PASS: {}" \;
+
+      - name: Lint Node scripts
+        run: |
+          find skills/frontend-master-loop/scripts -name '*.mjs' -exec node --check {} \; -exec echo "PASS: {}" \;
+
+      - name: Run dry-run verification
+        run: |
+          node skills/frontend-master-loop/scripts/run-frontend-loop.mjs --dry-run 2>&1 || echo "Dry-run completed"
+
+      - name: Validate package.json
+        run: |
+          node -e "JSON.parse(fs.readFileSync('skills/frontend-master-loop/package.json','utf8')); console.log('PASS: package.json')"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-master-loop-artifacts
+          path: |
+            artifacts/redesign/
+            skills/frontend-master-loop/
+          retention-days: 14

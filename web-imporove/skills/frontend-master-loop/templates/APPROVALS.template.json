@@ -1,0 +1,12 @@
+{
+  "approved_at": "<timestamp>",
+  "approved_by": "user",
+  "locked": true,
+  "sections": {
+    "scope": { "mode": "<mode>", "routes_in": ["<comma-list>"], "routes_out": [], "locales": ["en"] },
+    "constraints": { "staging_db_url_available": true, "backup_target_confirmed": false, "flag_provider": "env", "apm_stack": "none", "status_page_url": "none", "cicd": "github-actions" },
+    "budgets": { "max_cost_delta_pct": 20, "max_downtime_min": 0, "error_budget_pct": 25, "error_budget_confirmed": true },
+    "autonomy": { "authorized": true, "hst_acknowledged": true, "canary_consent": false, "auto_cleanup": false },
+    "risk_ack": { "migrations_not_auto_run": true, "cutover_paced": true, "phases_reversible": true }
+  }
+}
