@@ -1,0 +1,69 @@
+{
+  "persona": "P01",
+  "name": "Busy Professional",
+  "context": {
+    "viewport": "1440x900",
+    "locale": "en-US",
+    "network": "fast",
+    "zoom": 1.0,
+    "input": "mouse"
+  },
+  "tasks": [
+    {
+      "task_id": "P01-T1",
+      "goal": "Create an account and get started",
+      "status": "completed",
+      "steps": 6,
+      "time_to_first_value_s": 45,
+      "friction_avg": 0.33,
+      "dead_ends": ["Could not find signup button initially — it was in the hamburger menu"],
+      "top_frustrations": ["Signup form asked for phone number — unnecessary"],
+      "quote": "I was in a hurry and the signup took too many steps for what I needed.",
+      "step_log": [
+        { "step": 1, "intent": "Find signup button", "found_via": "getByRole('link', { name: 'Sign Up' })", "action": "Clicked Sign Up in nav", "result": "Navigated to /signup", "screenshot": "shots/persona-01/step-01.png", "friction": 0, "note": "" },
+        { "step": 2, "intent": "Enter name", "found_via": "getByLabel('Full Name')", "action": "Typed full name", "result": "Field accepted input", "screenshot": "shots/persona-01/step-02.png", "friction": 0, "note": "" },
+        { "step": 3, "intent": "Enter email", "found_via": "getByLabel('Email')", "action": "Typed email", "result": "Field accepted input", "screenshot": "shots/persona-01/step-03.png", "friction": 0, "note": "" },
+        { "step": 4, "intent": "Enter phone number", "found_via": "getByLabel('Phone')", "action": "Hesitated — unnecessary field, filled anyway", "result": "Field accepted input", "screenshot": "shots/persona-01/step-04.png", "friction": 2, "note": "Phone field felt invasive for a simple signup" },
+        { "step": 5, "intent": "Submit form", "found_via": "getByRole('button', { name: 'Create Account' })", "action": "Clicked submit", "result": "Account created, verification email sent", "screenshot": "shots/persona-01/step-05.png", "friction": 0, "note": "" },
+        { "step": 6, "intent": "Verify email", "found_via": "getByRole('link', { name: 'Resend email' })", "action": "Clicked resend", "result": "Email resent, waited 30s", "screenshot": "shots/persona-01/step-06.png", "friction": 1, "note": "Verification email took >30s" }
+      ],
+      "attacks": []
+    },
+    {
+      "task_id": "P01-T2",
+      "goal": "Find the main dashboard feature",
+      "status": "completed",
+      "steps": 3,
+      "time_to_first_value_s": 10,
+      "friction_avg": 0.0,
+      "dead_ends": [],
+      "top_frustrations": [],
+      "quote": "Dashboard was easy to find. I liked the overview page.",
+      "step_log": [
+        { "step": 1, "intent": "Navigate to dashboard", "found_via": "getByRole('link', { name: 'Dashboard' })", "action": "Clicked Dashboard in sidebar", "result": "Navigated to /dashboard", "screenshot": "shots/persona-01/step-07.png", "friction": 0, "note": "" },
+        { "step": 2, "intent": "View recent activity", "found_via": "getByRole('heading', { name: 'Recent Activity' })", "action": "Found the section", "result": "Recent activity shows correctly", "screenshot": "shots/persona-01/step-08.png", "friction": 0, "note": "" },
+        { "step": 3, "intent": "Check stats", "found_via": "getByRole('heading', { name: 'Statistics' })", "action": "Located stats cards", "result": "3 stats visible", "screenshot": "shots/persona-01/step-09.png", "friction": 0, "note": "" }
+      ],
+      "attacks": []
+    },
+    {
+      "task_id": "P01-T3",
+      "goal": "Compare pricing plans",
+      "status": "completed",
+      "steps": 2,
+      "time_to_first_value_s": 5,
+      "friction_avg": 0.0,
+      "dead_ends": [],
+      "top_frustrations": [],
+      "quote": "Pricing page was straightforward.",
+      "step_log": [
+        { "step": 1, "intent": "Go to pricing", "found_via": "getByRole('link', { name: 'Pricing' })", "action": "Clicked Pricing in nav", "result": "Navigated to /pricing", "screenshot": "shots/persona-01/step-10.png", "friction": 0, "note": "" },
+        { "step": 2, "intent": "Compare plans", "found_via": "getByRole('table')", "action": "Read plan comparison", "result": "3 plans visible with feature list", "screenshot": "shots/persona-01/step-11.png", "friction": 0, "note": "" }
+      ],
+      "attacks": []
+    }
+  ],
+  "blockers": [
+    { "page": "/signup", "issue": "Phone number field required — unnecessary for core signup", "severity": "P2", "evidence": ["step 4 friction 2"] }
+  ]
+}

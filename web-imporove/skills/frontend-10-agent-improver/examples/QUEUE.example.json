@@ -1,0 +1,30 @@
+[
+  {
+    "id": "F-TE-0001",
+    "agent": "A10",
+    "severity": "P2",
+    "title": "DataTable component has no test file for its 3 states",
+    "evidence": [{ "file": "src/components/DataTable.tsx", "line": 1, "snippet": "export function DataTable({ columns, data, isLoading }: DataTableProps)", "measurement": "0 test files found" }],
+    "impact": 3,
+    "effort": 3,
+    "fix_sketch": "Create __tests__/DataTable.test.tsx with loading, empty, and populated state tests.",
+    "metric": { "name": "component_test_coverage", "before": 0.45, "after_null_ok": null, "unit": "ratio" },
+    "files_touched": ["src/components/__tests__/DataTable.test.tsx"],
+    "status": "open",
+    "priority": 100.0
+  },
+  {
+    "id": "F-FR-0001",
+    "agent": "A7",
+    "severity": "P2",
+    "title": "Email field missing validation, autocomplete, and error linkage",
+    "evidence": [{ "file": "src/components/LoginForm.tsx", "line": 15, "snippet": "<input type=\"text\" name=\"email\" />", "measurement": "No validation, wrong type, no autocomplete" }],
+    "impact": 3,
+    "effort": 2,
+    "fix_sketch": "Change type to email, add required, autoComplete, aria-required, and linked error span.",
+    "metric": { "name": "form_validation_gaps", "before": 6, "after_null_ok": null, "unit": "gaps" },
+    "files_touched": ["src/components/LoginForm.tsx"],
+    "status": "in_progress",
+    "priority": 150.0
+  }
+]

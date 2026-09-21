@@ -1,0 +1,79 @@
+{
+  "persona": "P11",
+  "name": "Adversarial Chaos Tester",
+  "context": {
+    "viewport": "1440x900",
+    "locale": "en-US",
+    "network": "fast",
+    "zoom": 1.0,
+    "input": "mouse"
+  },
+  "tasks": [
+    {
+      "task_id": "P11-T1",
+      "goal": "Execute input abuse attacks on signup form",
+      "status": "completed",
+      "steps": 8,
+      "time_to_first_value_s": null,
+      "friction_avg": 2.5,
+      "dead_ends": ["A01 empty form showed server error without field highlight"],
+      "top_frustrations": ["Form accepted SQL fragment", "No maxlength on fields"],
+      "quote": "I broke the form three times and it never told me what I did wrong.",
+      "step_log": [
+        { "step": 1, "intent": "Submit empty form", "found_via": "getByRole('button', { name: 'Create Account' })", "action": "Clicked submit with empty fields", "result": "Server returned 422 — no field-level errors", "screenshot": "shots/P11/A01.png", "friction": 3, "note": "Generic 'please fix errors' banner" },
+        { "step": 2, "intent": "Paste 10k chars", "found_via": "getByLabel('Full Name')", "action": "Pasted 10000 character string", "result": "Field truncated silently — no visual feedback", "screenshot": "shots/P11/A02.png", "friction": 2, "note": "No character counter" }
+      ],
+      "attacks": [
+        {
+          "attack_id": "A01", "group": "Input abuse", "target": "Signup form",
+          "did": "Clicked submit with all fields empty",
+          "expected": "Field-level validation errors highlighted",
+          "actual": "Generic error banner at top — no field highlighted",
+          "severity": "S1", "reproduced": true, "pass": "desktop",
+          "screenshot": "shots/P11/A01.png",
+          "fix": "Add per-field error messages with aria-describedby"
+        },
+        {
+          "attack_id": "A02", "group": "Input abuse", "target": "Name field",
+          "did": "Pasted 10000 characters into full name field",
+          "expected": "Max length enforcement or visible truncation warning",
+          "actual": "Field silently truncated at 255 chars — no feedback",
+          "severity": "S2", "reproduced": true, "pass": "desktop",
+          "screenshot": "shots/P11/A02.png",
+          "fix": "Add maxlength attribute or show character count"
+        },
+        {
+          "attack_id": "A04", "group": "Input abuse", "target": "Comment field",
+          "did": "Pasted emoji + RTL override + zero-width spaces",
+          "expected": "Safe display with proper sanitisation",
+          "actual": "RTL text broke layout alignment, zero-width chars visible in source",
+          "severity": "S1", "reproduced": true, "pass": "mobile",
+          "screenshot": "shots/P11/A04.png",
+          "fix": "Normalise Unicode input; apply bidi isolation CSS"
+        },
+        {
+          "attack_id": "A06", "group": "Input abuse", "target": "Search field",
+          "did": "Pasted SQL SELECT * FROM users",
+          "expected": "Escaped plain text display",
+          "actual": "SQL fragment displayed as-is — no injection, but no escaping visible in UI",
+          "severity": "S3", "reproduced": true, "pass": "desktop",
+          "screenshot": "shots/P11/A06.png",
+          "fix": "No code execution — low risk. Sanitise for safety"
+        },
+        {
+          "attack_id": "A09", "group": "Click abuse", "target": "Submit button",
+          "did": "Double-clicked submit on payment form",
+          "expected": "Second click ignored or button disabled",
+          "actual": "Two POST requests sent — duplicate charge risk",
+          "severity": "S0", "reproduced": true, "pass": "desktop",
+          "screenshot": "shots/P11/A09.png",
+          "fix": "Disable submit button on first click; idempotency key on server"
+        }
+      ]
+    }
+  ],
+  "blockers": [
+    { "page": "/signup", "issue": "No field-level validation errors on empty submit", "severity": "P1", "evidence": ["A01 generic error banner"] },
+    { "page": "/checkout", "issue": "Double-click submit causes duplicate charge", "severity": "P0", "evidence": ["A09 two POST requests sent"] }
+  ]
+}

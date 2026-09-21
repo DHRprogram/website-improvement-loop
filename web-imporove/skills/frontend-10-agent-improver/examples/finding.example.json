@@ -1,0 +1,26 @@
+{
+  "id": "F-PF-0001",
+  "agent": "A2",
+  "severity": "P1",
+  "title": "Lodash full barrel import adds 71 KB gzip to vendor bundle",
+  "evidence": [
+    {
+      "file": "src/utils/search.ts",
+      "line": 1,
+      "snippet": "import _ from 'lodash'",
+      "measurement": "71 KB gzip in vendor bundle (only debounce used)"
+    },
+    {
+      "file": "src/utils/search.ts",
+      "line": 15,
+      "snippet": "_.debounce(searchFn, 300)",
+      "measurement": "Only debounce function used from lodash"
+    }
+  ],
+  "impact": 4,
+  "effort": 1,
+  "fix_sketch": "Replace barrel import with direct import: import debounce from 'lodash/debounce'. Saves ~70 KB gzip from vendor chunk.",
+  "metric": { "name": "bundle_kb", "before": 512, "after_null_ok": null, "unit": "KB" },
+  "files_touched": ["src/utils/search.ts"],
+  "status": "open"
+}

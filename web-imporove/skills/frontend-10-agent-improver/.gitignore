@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.next/
+build/
+artifacts/
+*.log
+.env
+.env.local
+coverage/
+.nyc_output/
+*.tsbuildinfo

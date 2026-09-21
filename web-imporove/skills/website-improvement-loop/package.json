@@ -1,0 +1,25 @@
+{
+  "name": "website-improvement-loop",
+  "version": "0.1.0",
+  "description": "Audit, improve, test, ideate, and build website features with quality bar enforcement",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "verify": "npm run lint:json && npm run lint:bash && npm run lint:mjs",
+    "test:aggregate": "node scripts/user-test/aggregate-findings.mjs",
+    "test:axe": "node scripts/user-test/run-axe.mjs",
+    "test:baseline-save": "node scripts/user-test/baseline-save.mjs",
+    "test:baseline-check": "node scripts/user-test/baseline-check.mjs",
+    "lint:json": "for f in $(find . -name '*.json' -not -path './node_modules/*'); do node -e \"JSON.parse(require('fs').readFileSync('$f'))\" || exit 1; done",
+    "lint:bash": "for f in $(find . -name '*.sh' -not -path './node_modules/*'); do bash -n \"$f\" || exit 1; done",
+    "lint:mjs": "for f in $(find . -name '*.mjs' -not -path './node_modules/*'); do node --check \"$f\" || exit 1; done"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0",
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.48.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

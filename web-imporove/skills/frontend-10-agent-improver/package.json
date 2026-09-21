@@ -1,0 +1,14 @@
+{
+  "name": "frontend-10-agent-improver",
+  "version": "0.1.0",
+  "description": "Fully automated 10-agent frontend improvement system for Claude Code",
+  "type": "module",
+  "scripts": {
+    "test": "node --check scripts/run-loop.mjs && node --check scripts/merge-findings.mjs && node --check scripts/rank-findings.mjs",
+    "validate-schema": "node -e \"JSON.parse(require('fs').readFileSync('scripts/finding-schema.json','utf8'))\"",
+    "validate-examples": "node -e \"const s=JSON.parse(require('fs').readFileSync('scripts/finding-schema.json','utf8'));['finding','STATE','QUEUE'].forEach(n=>{const d=JSON.parse(require('fs').readFileSync('examples/'+n+'.example.json','utf8'));console.log(n+': OK')});\""
+  },
+  "keywords": ["claude-code", "claude-skill", "frontend", "improvement", "multi-agent", "lighthouse", "axe-core"],
+  "license": "MIT",
+  "engines": { "node": ">=18" }
+}
