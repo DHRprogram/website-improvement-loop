@@ -1,145 +1,62 @@
 ---
 description: Multi-service multi-agent orchestration platform built in Python/Django. Queen orchestrator plans tasks, agents execute in sandboxes, human approves before merge. Stops only on Hard Stop Triggers.
-argument-hint: "[--mode=build|run|status] [--goals=<json>] [--budget=<usd>] [--resume]"
+argument-hint: "[--mode=build|run|status|logs|stop] [--goals=<json>] [--budget=<usd>] [--service=name] [--resume]"
 ---
 
 You are /web-improvement-loop:agent-team.
 
 IMPORTANT PATH: The skill is at {cwd}/skills/agent-team-orchestrator/
-
-## Overview
-
-This skill builds and runs a multi-agent orchestration platform consisting of 7
-services plus shared libraries. A Queen orchestrator receives goals, plans tasks
-via LLM, dispatches to specialized agents running in sandboxed containers, and
-requests human approval before merging via draft PRs.
+Template Python code is at {cwd}/skills/agent-team-orchestrator/templates/python/
+Orchestrator script is at {cwd}/skills/agent-team-orchestrator/scripts/run-agent-team.mjs
 
 ## Invocation
 
-1. Check if {cwd}/services/ already exists (from --mode=build):
-   - If YES: start services with docker-compose up
-   - If NO: run --mode=build first
-2. Invoke the skill via reading {cwd}/skills/agent-team-orchestrator/SKILL.md directly
-3. Or use the orchestrator script:
-   node {skill_dir}/scripts/run-agent-team.mjs --dry-run
+Run with one of these modes (from $ARGUMENTS):
 
-## Arguments (from $ARGUMENTS)
+  --mode=build    Scaffold shared/, services/*, tests/, docker-compose.yml, pyproject.toml, .env.example into templates/python/
+  --mode=run      Start all services via docker compose up -d, process goals from GOALS.json
+  --mode=status   Show active goals, task counts, budget usage, pending approvals
+  --mode=logs     Tail service logs: --service=name (gateway|control_room|orchestrator|agent_runtime|sandbox|memory|git_bridge)
+  --mode=stop     Gracefully stop all services via docker compose down
 
-  --mode=MODE              build | run | status (default run)
-  --goals=JSON             JSON string of goal(s) to process
+Arguments:
+  --mode=MODE              build | run | status | logs | stop (default run)
+  --goals=JSON             JSON goal(s) to add: {"goal":"...","roles":["backend"],"budget":30}
   --budget=USD             Max token cost in USD (default 50)
   --resume                 Resume from last STATE.json checkpoint
-  --dry-run                Validate config + show plan without executing
+  --service=NAME           Service name filter for --mode=logs
+  --dry-run                Validate configuration without executing
 
 ## Architecture
 
-### Services
-| Service | Stack | Purpose |
-|---------|-------|---------|
-| gateway | Django + DRF | Public API, JWT auth |
-| control_room | Django + HTMX | Admin UI dashboard |
-| orchestrator | Django + Celery | Queen orchestrator |
-| agent_runtime | Python async | Task execution workers (3 replicas) |
-| sandbox | FastAPI + Docker | Isolated task execution environment |
-| memory | Django + pgvector | Semantic memory store |
-| git_bridge | FastAPI + PyGithub | Draft PR creation |
+### Services (docker compose)
+| Service       | Stack        | Port | Purpose                          |
+|---------------|--------------|------|----------------------------------|
+| gateway       | Django + DRF | 8000 | Public REST API                  |
+| control_room  | Django + HTMX| 8001 | Admin dashboard UI               |
+| orchestrator  | Django + Celery| 8002 | Queen LLM planner              |
+| agent_runtime | FastAPI x3   | 8003 | Async worker pool                |
+| sandbox       | FastAPI      | 8004 | Isolated Docker container exec   |
+| memory        | FastAPI      | 8005 | pgvector semantic search         |
+| git_bridge    | FastAPI      | 8006 | Draft PR creation                |
+| postgres      | PostgreSQL   | 5432 | DB + pgvector extension          |
+| redis         | Redis 7      | 6379 | Event bus (Streams) + rate limit |
 
 ### Shared Libraries
-| Library | Description |
-|---------|-------------|
-| contracts.py | Pydantic models (Goal, TaskSpec, TaskResult, etc.) |
-| event_bus.py | Redis Streams pub/sub with ack |
-| rate_limiter.py | Redis sorted-set sliding window |
-| llm_client.py | OpenRouter client with retry + audit log |
-| role_prompts.py | Role-specific prompts for each agent type |
-| logging.py | Structured JSON logging |
+| Library          | Description                                |
+|------------------|--------------------------------------------|
+| contracts.py     | Pydantic models (Goal, TaskSpec, etc.)     |
+| event_bus.py     | Redis Streams pub/sub with ack             |
+| rate_limiter.py  | Redis sorted-set sliding window            |
+| llm_client.py    | OpenRouter client with fallback model      |
+| role_prompts.py  | Role prompts for designer/frontend/etc.    |
+| logging.py       | Structured JSON log formatter              |
 
-### LLM Configuration
-- Provider: OpenRouter
-- Model: qwen/qwen3.8-27b:free
+### LLM Config
+- Provider: OpenRouter (qwen/qwen3.8-27b:free)
 - Fallback: OPENROUTER_FALLBACK_MODEL env var
 - Retry: exponential backoff on 429/5xx
-- Auth: OPENROUTER_API_KEY from env (never logged)
-
-### Queen Planning Prompt
-The Queen converts user goals into a JSON plan:
-```json
-{
-  "tasks": [
-    {
-      "title": "...",
-      "description": "...",
-      "role": "designer|frontend|backend|qa|security|devops|reviewer",
-      "depends_on": [],
-      "priority": "low|normal|high|critical",
-      "allowed_paths": ["src/**"],
-      "token_budget": 5000
-    }
-  ]
-}
-```
-
-### Agent Roles
-| Role | Allowed Paths | Constraints |
-|------|---------------|-------------|
-| designer | src/frontend/**/*.css, public/assets/* | WCAG 2.2 AA, color contrast |
-| frontend | src/frontend/**/*.tsx, public/components/* | React hooks rules, accessibility |
-| backend | src/backend/**/*.py | Django ORM rules, no raw SQL without review |
-| qa | tests/, playwright/ | Coverage >=80%, regression-only |
-| security | ** | OWASP Top 10, no secrets in code |
-| devops | docker-compose.yml, .github/workflows/* | Never touch prod DB |
-| reviewer | ** | Returns {"approved": bool, "issues": [...]} |
-
-## Security Constraints
-- No agent has direct production DB access
-- Sandbox containers have network_disabled=True, read_only rootfs, cap_drop=ALL
-- All writes go through draft PRs, never direct push to main
-- Audit log every LLM call with correlation ID
-- All secrets loaded from .env, never logged or printed
-
-## Rate Limiting
-- Redis sorted-set sliding window
-- Default: 20 requests per 60 seconds per process group
-- On 429: backoff and requeue (never drop)
-- On persistent failure: switch to fallback model
-
-## Hard Stop Triggers (HST-B01..B06)
-B01: LLM provider persistent failure after fallback switch
-B02: Sandbox attempted network access
-B03: Agent tried to write outside allowed_paths
-B04: Human approval required but not yet granted
-B05: Budget cap exceeded (tokens or cost)
-B06: Secret leak detected in staged files
-
-## Build Mode (--mode=build)
-When invoked with --mode=build, the skill:
-1. Scaffolds shared/ with all 6 library files
-2. Creates all 7 service directories with full Django/FastAPI setup
-3. Writes pyproject.toml with pinned dependencies
-4. Writes docker-compose.yml with all services
-5. Writes .env.example with all required variables
-6. Creates tests/ directory with unit + integration tests
-7. Generates Django migrations where applicable
-8. Writes README.md with setup instructions and known limitations
-
-## Run Mode (--mode=run)
-When invoked with --mode=run:
-1. Loads GOALS.json from artifacts/agent-team-orchestrator/
-2. Queen receives goal.created events
-3. Plans tasks, builds DAG
-4. Dispatches task.assigned to agent_runtime
-5. Workers execute in sandbox containers
-6. Results sent as task.completed events
-7. Review requested -> human approve/reject
-8. Draft PR opened for approved changes
-
-## Status Mode (--mode=status)
-Shows current state:
-- Active goals and tasks
-- Budget usage
-- Agent health
-- Pending approvals
-- Recent hard stop triggers
+- Audit: every call logged with correlation ID
 
 ## Execution Flow
 
@@ -147,71 +64,95 @@ Shows current state:
 User Goal -> Gateway POST /api/goals
     -> Orchestrator (Queen) parses goal -> JSON plan
     -> Builds DAG in Postgres
-    -> Publishes task.assigned
-        -> agent_runtime worker subscribes task.assigned
+    -> Publishes task.assigned via Redis Streams
+        -> agent_runtime worker picks up task
             -> Loads role prompt + memory context
-            -> Calls OpenRouter with token budget
+            -> Calls OpenRouter within token_budget
             -> Writes files within allowed_paths
-            -> Sends files to sandbox for tests
-            -> Publishes task.completed with artifacts
+            -> Runs tests in sandbox containers
+            -> Publishes task.completed
         -> git_bridge opens DRAFT PR
-        -> Human reviews -> approve/reject
+        -> Human reviews in control_room UI
             -> If approve: merge PR
-            -> If reject: send feedback to agent
+            -> If reject: feedback loop to agent
 ```
+
+## Mode Details
+
+### --mode=build
+Copies templates/python/ into place:
+1. Scaffolds shared/ with all 6 library files
+2. Creates services/{name}/ directories with full setup
+3. Writes pyproject.toml, docker-compose.yml, .env.example
+4. Creates tests/ with unit + integration test files
+5. Generates README.md with setup instructions
+
+Run: `node skills/agent-team-orchestrator/scripts/run-agent-team.mjs --mode=build`
+
+### --mode=run
+Starts the full platform:
+1. Loads GOALS.json or accepts --goals=JSON
+2. Queen receives goal events, plans tasks as JSON DAG
+3. Dispatches to agent_runtime workers
+4. Workers execute in sandbox containers
+5. Results published to Redis Streams
+6. Draft PRs opened for human approval
+
+Check if services/ exists; if not, run --mode=build first.
+Then: `docker compose -f skills/agent-team-orchestrator/docker-compose.yml up -d`
+
+### --mode=status
+Shows current state:
+```bash
+curl http://localhost:8000/health    # gateway health
+curl http://localhost:8001/health    # control_room health
+cat artifacts/agent-team-orchestrator/STATE.json
+```
+Also checks: active goals, running tasks, budget usage, pending approvals.
+
+### --mode=logs --service=gateway
+Tail logs from a specific service:
+```bash
+docker compose -f skills/agent-team-orchestrator/docker-compose.yml logs -f --tail=50 <service>
+```
+If --service is omitted, shows aggregated summary of all services.
+
+### --mode=stop
+Gracefully stops all services:
+```bash
+docker compose -f skills/agent-team-orchestrator/docker-compose.yml down
+# Also cleans sandbox containers
+docker rm -f $(docker ps -aq --filter "label=com.agent_team.sandbox" 2>/dev/null) 2>/dev/null || true
+```
+
+## Security Constraints
+- No agent has direct production DB access
+- Sandbox containers: network_disabled=True, read_only rootfs, cap_drop=ALL, mem_limit=1g
+- All writes go through draft PRs, never direct push
+- Audit log every LLM call with correlation ID
+
+## Hard Stop Triggers (HST-B01..B06)
+- B01: LLM provider persistent failure after fallback
+- B02: Sandbox attempted network access
+- B03: Agent wrote outside allowed_paths
+- B04: Approval required but not granted
+- B05: Budget cap exceeded
+- B06: Secret leak detected
 
 ## Artifacts Directory
-All outputs written to artifacts/agent-team-orchestrator/:
-- APPROVALS.json
-- COMPOSITION_REGISTRY.json
-- STATE.json
-- GOALS.json
-- PLAN.json
-- TASK_RESULT.json
-- BUDGET.json
-- HARD_STOP_*.md
-- FINAL_REPORT.md
+All outputs to artifacts/agent-team-orchestrator/:
+- APPROVALS.json (SHA-256 locked user answers)
+- COMPOSITION_REGISTRY.json (reusable assets scan)
+- STATE.json (phase state machine, HST tracker)
+- GOALS.json, PLAN.json, TASK_RESULT.json
+- BUDGET.json (per-agent tracking, alerts)
+- HARD_STOP_*.md (trigger reports)
+- FINAL_REPORT.md (completion report)
 
 ## Guardrails
-- Never commit secrets. Never print API keys.
-- Never touch production DB. Never auto-run migrations.
-- Never force push, never rebase main.
-- All work through draft PRs, human must approve before merge.
-- Every action idempotent (task_id + idempotency_key dedup).
-- All writes tracked in structured logs with correlation IDs.
-- Budget cap enforced at every LLM call level.
-
-## Non-Goals
-- Production deployment automation (manual gate required)
-- Infrastructure provisioning outside docker-compose
-- Direct database modifications on production servers
-- Auto-scaling decisions without human input
-- Third-party integrations beyond OpenRouter, GitHub, Redis, PostgreSQL
-
-## Resume Protocol
-1. STATE.json lives at artifacts/agent-team-orchestrator/STATE.json
-2. Each phase/approval appends its record before moving forward
-3. If interrupted, re-invoke with --resume
-4. Load STATE.json, find last completed milestone, continue from next
-5. Approvals are NOT re-requested unless they expired
-
-## Final Report Schema
-Written to artifacts/agent-team-orchestrator/FINAL_REPORT.md on completion. Sections:
-1. Executive Summary
-2. Goals Processed
-3. Tasks Completed vs Failed
-4. Budget Usage (total tokens, total cost, per-agent breakdown)
-5. PRs Created and Merged
-6. All Hard Stop Reports (if any fired)
-7. Agent Performance Summary
-8. Lessons Learned
-
-## Invocation Examples
-
-```
-/web-improvement-loop:agent-team --mode=build
-/web-improvement-loop:agent-team --mode=run --goals='{"goal":"Build auth microservice","roles":["backend","qa","security"]}'
-/web-improvement-loop:agent-team --mode=status
-/web-improvement-loop:agent-team --resume --budget=100
-/web-improvement-loop:agent-team --dry-run
-```
+- Never commit secrets or print API keys
+- Never touch production DB or auto-run migrations
+- Never force push or rebase main
+- All work through draft PRs, human must approve
+- Every action idempotent (task_id + idempotency_key dedup)
+- Budget cap enforced at every LLM call level
