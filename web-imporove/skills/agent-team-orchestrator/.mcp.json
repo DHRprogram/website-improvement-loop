@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "agent-team-orchestrator": {
+      "command": "node",
+      "args": [
+        "/root/project/web-imporove/skills/agent-team-orchestrator/scripts/run-agent-team.mjs"
+      ],
+      "env": {
+        "AGENT_TEAM_GATEWAY_URL": "${AGENT_TEAM_GATEWAY_URL:http://localhost:8000}",
+        "AGENT_TEAM_REDIS_URL": "${AGENT_TEAM_REDIS_URL:redis://localhost:6379/0}",
+        "AGENT_TEAM_POSTGRES_DSN": "${AGENT_TEAM_POSTGRES_DSN:postgresql://postgres:postgres@localhost:5432/agent_team}",
+        "AGENT_TEAM_OTEL_ENDPOINT": "${AGENT_TEAM_OTEL_ENDPOINT:http://localhost:4317}",
+        "AGENT_TEAM_GITHUB_TOKEN": "${AGENT_TEAM_GITHUB_TOKEN}",
+        "AGENT_TEAM_OPENROUTER_API_KEY": "${AGENT_TEAM_OPENROUTER_API_KEY}"
+      }
+    }
+  }
+}

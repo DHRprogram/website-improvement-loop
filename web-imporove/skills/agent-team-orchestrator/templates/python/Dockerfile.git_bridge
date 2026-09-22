@@ -1,0 +1,7 @@
+FROM python:3.12-slim
+WORKDIR /app
+RUN pip install --no-cache-dir fastapi uvicorn httpx pygithub pydantic opentelemetry-api prometheus-client
+COPY services/git_bridge/ services/git_bridge/
+COPY shared/ shared/
+EXPOSE 8006
+CMD ["uvicorn", "services.git_bridge.main:app", "--host", "0.0.0.0", "--port", "8006"]

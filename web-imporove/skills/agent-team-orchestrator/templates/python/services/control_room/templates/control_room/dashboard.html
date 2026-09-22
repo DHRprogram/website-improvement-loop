@@ -1,0 +1,20 @@
+{% extends "control_room/base.html" %}
+{% block title %}Dashboard - Agent Team Control Room{% endblock %}
+{% block content %}
+<div class="card"><h2>Recent Goals</h2>
+<table><tr><th>ID</th><th>Title</th><th>Status</th><th>Budget</th><th>Created</th></tr>
+{% for goal in goals %}
+<tr><td>{{ goal.id|slice:":8" }}</td><td>{{ goal.text|truncatechars:60 }}</td>
+<td><span class="tag tag-{{ goal.status }}">{{ goal.status }}</span></td>
+<td>${{ goal.budget_usd }}</td><td>{{ goal.created_at|date:"M d H:i" }}</td></tr>
+{% empty %}<tr><td colspan="5" style="text-align:center">No goals yet</td></tr>{% endfor %}
+</table></div>
+<div class="card"><h2>Recent Tasks</h2>
+<table><tr><th>Task</th><th>Role</th><th>Status</th><th>Cost</th></tr>
+{% for t in recent_tasks %}
+<tr><td>{{ t.task.title|truncatechars:40 }}</td><td>{{ t.task.role }}</td>
+<td><span class="tag tag-{{ t.status }}">{{ t.status }}</span></td>
+<td>${{ t.cost_usd|default:"0.00" }}</td></tr>
+{% empty %}<tr><td colspan="4" style="text-align:center">No tasks yet</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

@@ -1,0 +1,3 @@
+FROM otel/opentelemetry-collector-contrib:latest
+ENTRYPOINT ["/otelcol-contrib", "--config", "/etc/otelcol-config.yaml"]
+VOLUME ["/etc"]

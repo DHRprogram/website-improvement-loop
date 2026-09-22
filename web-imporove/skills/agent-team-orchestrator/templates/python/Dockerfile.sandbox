@@ -1,0 +1,7 @@
+FROM python:3.12-slim
+WORKDIR /app
+RUN pip install --no-cache-dir fastapi uvicorn docker httpx opentelemetry-api prometheus-client
+COPY services/sandbox/ services/sandbox/
+COPY shared/ shared/
+EXPOSE 8004
+CMD ["uvicorn", "services.sandbox.main:app", "--host", "0.0.0.0", "--port", "8004"]

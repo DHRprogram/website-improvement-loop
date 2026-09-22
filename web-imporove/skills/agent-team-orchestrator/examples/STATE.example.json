@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "status": "running",
+  "phases": {
+    "P0": {"status": "complete", "completed_at": "2026-09-22T14:00:00Z"},
+    "P1": {"status": "complete", "completed_at": "2026-09-22T14:05:00Z"},
+    "B1": {"status": "running", "started_at": "2026-09-22T14:10:00Z"}
+  },
+  "completed_phases": ["P0", "P1"],
+  "current_phase": "B1",
+  "start_time": "2026-09-22T14:00:00Z",
+  "hst_fired": null,
+  "goals_processed": 1,
+  "tasks_completed": 0,
+  "tasks_failed": 0
+}

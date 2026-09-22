@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.env
+artifacts/BUDGET.json
+artifacts/goals/*.json
+artifacts/plans/*.json
+*.sqlite3
+coverage.xml
+.pytest_cache/
+.mypy_cache/

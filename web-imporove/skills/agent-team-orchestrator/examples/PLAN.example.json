@@ -1,0 +1,58 @@
+{
+  "plan_id": "plan-001",
+  "goal_id": "goal-001",
+  "created_at": "2026-09-22T14:00:00Z",
+  "queen_model": "qwen/qwen3.8-27b:free",
+  "tasks": [
+    {
+      "id": "task-001",
+      "title": "Set up Django project structure for gateway service",
+      "description": "Create Django project with DRF, JWT authentication, basic health check endpoint, OpenTelemetry instrumentation",
+      "role": "backend",
+      "depends_on": [],
+      "priority": "critical",
+      "allowed_paths": ["services/gateway/**/*.py", "shared/**/*.py"],
+      "token_budget": 5000
+    },
+    {
+      "id": "task-002",
+      "title": "Implement Pydantic contracts and event bus",
+      "description": "Write contract models (Goal, TaskSpec, TaskResult), Redis Streams event bus with pub/sub/ack pattern",
+      "role": "backend",
+      "depends_on": [],
+      "priority": "critical",
+      "allowed_paths": ["shared/**/*.py"],
+      "token_budget": 4000
+    },
+    {
+      "id": "task-003",
+      "title": "Create Queen orchestrator Celery tasks",
+      "description": "Django app with Celery worker, goal parsing into task DAG, idempotency dedup via task_id + idempotency_key",
+      "role": "backend",
+      "depends_on": ["task-001", "task-002"],
+      "priority": "high",
+      "allowed_paths": ["services/orchestrator/**/*.py", "shared/**/*.py"],
+      "token_budget": 6000
+    },
+    {
+      "id": "task-004",
+      "title": "Build FastAPI sandbox wrapper with Docker API",
+      "description": "Container creation with network_disabled=True, read_only rootfs, cap_drop=ALL, mem_limit=1g, temp workdir, always cleanup",
+      "role": "devops",
+      "depends_on": [],
+      "priority": "high",
+      "allowed_paths": ["services/sandbox/**/*.py"],
+      "token_budget": 5000
+    },
+    {
+      "id": "task-005",
+      "title": "QA test suite for contracts validation",
+      "description": "Pytest tests validating Goal, TaskSpec, TaskResult parsing — valid inputs accepted, malformed rejected, missing fields caught",
+      "role": "qa",
+      "depends_on": ["task-002"],
+      "priority": "normal",
+      "allowed_paths": ["tests/test_contracts.py"],
+      "token_budget": 3000
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "approved_at": "2026-09-22T14:00:00Z",
+  "approved_by": "human-operator",
+  "locked": true,
+  "lock_hash": "sha256:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+  "sections": {
+    "scope": {
+      "mode": "build",
+      "services": ["gateway", "control_room", "orchestrator", "agent_runtime", "sandbox", "memory", "git_bridge"],
+      "roles_requested": ["backend", "frontend", "qa"],
+      "description": "Build multi-agent orchestration platform"
+    },
+    "constraints": {
+      "staging_db_url_available": true,
+      "backup_target_confirmed": true,
+      "docker_compose_version": "3.8",
+      "openrouter_api_key_set": true,
+      "redis_available": true,
+      "ci_cd_enabled": true
+    },
+    "budgets": {
+      "total_cap_usd": 50,
+      "per_agent_cap_usd": 10,
+      "max_downtime_min": 0,
+      "rate_limit_requests": 20,
+      "rate_limit_window_seconds": 60
+    },
+    "autonomy": {
+      "authorized": true,
+      "hst_acknowledged": true,
+      "draft_pr_only": true,
+      "sandbox_network_disabled": true
+    },
+    "risk_ack": {
+      "no_prod_db_access": true,
+      "all_writes_through_pr": true,
+      "secret_handling": true,
+      "idempotent_operations": true
+    }
+  }
+}

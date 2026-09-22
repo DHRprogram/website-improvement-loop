@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "goals": [
+    {
+      "id": "goal-001",
+      "text": "Build a multi-agent orchestration platform with Queen planner, sandboxed execution, and draft PR workflow",
+      "roles": ["backend", "qa", "security", "devops"],
+      "budget_usd": 50,
+      "priority": "critical",
+      "created_at": "2026-09-22T14:00:00Z",
+      "status": "planned",
+      "tags": ["platform", "orchestration", "multi-agent"]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel>=0.42"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "agent-team-orchestrator"
+version = "1.0.0"
+description = "Full orchestration system for multi-agent software teams with Queen orchestrator, sandboxed execution, budget tracking, and approval gates"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "Django>=5.0,<5.1",
+    "djangorestframework>=3.15,<4.0",
+    "drf-spectacular>=0.27,<1.0",
+    "django-celery-beat>=2.7,<3.0",
+    "redis>=5.0,<6.0",
+    "celery>=5.4,<6.0",
+    "psycopg2-binary>=2.9,<3.0",
+    "django-contrib-postgres-extra>=1.4,<2.0",
+    "pydantic>=2.7,<3.0",
+    "openai>=1.30,<2.0",
+    "httpx>=0.27,<1.0",
+    "python-json-logger>=2.0,<3.0",
+    "fastapi>=0.110,<1.0",
+    "uvicorn>=0.29,<1.0",
+    "pygithub>=2.3,<3.0",
+    "docker>=7.0,<8.0",
+    "prometheus-client>=0.20,<1.0",
+    "opentelemetry-api>=1.25,<2.0",
+    "opentelemetry-sdk>=1.25,<2.0",
+    "opentelemetry-instrumentation-django>=0.46b0,<1.0",
+    "opentelemetry-instrumentation-fastapi>=0.46b0,<1.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.25,<2.0",
+    "pytest>=8.1,<9.0",
+    "pytest-django>=4.8,<5.0",
+    "pytest-asyncio>=0.23,<1.0",
+    "pytest-cov>=5.0,<6.0",
+    "hypothesis>=6.100,<7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.4,<25.0",
+    "ruff>=0.4,<1.0",
+    "mypy>=1.10,<2.0",
+    "pre-commit>=3.8,<4.0",
+]
+
+[project.scripts]
+run-agent-team = "scripts.run_agent_team:main"
+plan-validation = "scripts.plan_validation:main"
+goal-parser = "scripts.goal_parser:main"
+budget-tracker = "scripts.budget_tracker:main"
+hard-stop-detector = "scripts.hard_stop_detector:main"
+state-manager = "scripts.state_manager:main"
+compose-validator = "scripts.compose_validator:main"
+approval-verifier = "scripts.approval_verifier:main"
+
+[tool.setuptools.packages.find]
+include = ["shared*", "services.*"]
+where = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+DJANGO_SETTINGS_MODULE = "services.gateway.settings.test_settings"
+addopts = "--cov=. --cov-report=term-missing --tb=short -v"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]

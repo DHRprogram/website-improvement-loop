@@ -1,0 +1,19 @@
+{
+  "task_id": "task-001",
+  "status": "success",
+  "artifacts": [
+    {"type": "code", "path": "services/gateway/main.py", "size_bytes": 2048},
+    {"type": "code", "path": "services/gateway/api.py", "size_bytes": 3072},
+    {"type": "test", "path": "tests/test_gateway.py", "size_bytes": 1536}
+  ],
+  "usage": {"tokens": 4500, "cost_usd": 0.12, "latency_ms": 32000},
+  "sandbox_result": {
+    "exit_code": 0,
+    "passed": true,
+    "tests_run": 5,
+    "tests_passed": 5,
+    "logs": "All 5 tests passed."
+  },
+  "completed_at": "2026-09-22T14:30:00Z",
+  "idempotency_key": "task-001-v1"
+}

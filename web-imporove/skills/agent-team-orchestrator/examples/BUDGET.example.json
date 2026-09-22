@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "total_cap_usd": 50,
+  "spent_usd": 23.50,
+  "remaining_usd": 26.50,
+  "per_agent": {
+    "backend-dev": {"tokens": 45000, "cost_usd": 8.20, "tasks_completed": 3, "last_task_at": "2026-09-22T14:30:00Z"},
+    "qa-tester": {"tokens": 30000, "cost_usd": 5.10, "tasks_completed": 2, "last_task_at": "2026-09-22T14:35:00Z"},
+    "security-auditor": {"tokens": 20000, "cost_usd": 3.80, "tasks_completed": 1, "last_task_at": "2026-09-22T14:25:00Z"}
+  },
+  "alerts": [
+    {"type": "info", "message": "Spending at 47% of cap", "time": "2026-09-22T14:30:00Z"}
+  ],
+  "hard_stop_triggered": false,
+  "overrides": [],
+  "updated_at": "2026-09-22T14:35:00Z"
+}

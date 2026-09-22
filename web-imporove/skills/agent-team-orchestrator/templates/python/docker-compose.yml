@@ -1,0 +1,140 @@
+# Agent Team Orchestrator — Docker Compose
+# Services: postgres(pgvector), redis, gateway, control_room, orchestrator,
+#           agent_runtime (x3 replicas), sandbox, memory, git_bridge, otel-collector
+version: "3.8"
+
+services:
+  postgres:
+    image: ankane/pgvector:v0.5.1
+    environment:
+      POSTGRES_DB: agent_platform
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: agent_password_change_me
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: on-failure
+
+  control_room:
+    build:
+      context: .
+      dockerfile: services/control_room/Dockerfile
+    ports:
+      - "8001:8000"
+    env_file: .env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: on-failure
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
+    ports:
+      - "8002:8002"
+    env_file: .env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    command: celery -A tasks worker --loglevel=info
+    restart: on-failure
+
+  agent_runtime:
+    build:
+      context: .
+      dockerfile: services/agent_runtime/Dockerfile
+    env_file: .env
+    deploy:
+      replicas: 3
+    depends_on:
+      redis: { condition: service_healthy }
+      sandbox: { condition: service_healthy }
+    restart: on-failure
+
+  sandbox:
+    build:
+      context: .
+      dockerfile: services/sandbox/Dockerfile
+    ports:
+      - "8004:8004"
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    security_opt:
+      - no-new-privileges:true
+    restart: on-failure
+
+  memory:
+    build:
+      context: .
+      dockerfile: services/memory/Dockerfile
+    ports:
+      - "8005:8005"
+    env_file: .env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: on-failure
+
+  git_bridge:
+    build:
+      context: .
+      dockerfile: services/git_bridge/Dockerfile
+    ports:
+      - "8006:8006"
+    env_file: .env
+    restart: on-failure
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+
+volumes:
+  pgdata:
+  redis-data:
+  prometheus-data:
