@@ -44,3 +44,25 @@ Validate environment, tools, access rights, and backup status before any redesig
 - Missing tool -> install and retry (max 3 attempts).
 - Production hostname detected -> HST-06 triggered.
 - Backup unreachable -> warn but can proceed (unless confirmed in P0).
+
+## Checklist
+1. [ENV_NODE] Node.js >= 20 installed and accessible.
+2. [ENV_PYTHON] Python >= 3.11 installed and accessible.
+3. [ENV_BASH] Bash >= 5 installed and accessible.
+4. [GIT_BRANCH] On dedicated branch, not main.
+5. [GH_AUTH] GitHub token available for PR operations.
+6. [STAGING_URL] Staging URL configured in APPROVALS.json.
+7. [STAGING_DB] Staging database accessible.
+8. [BACKUP_TARGET] Backup target confirmed and writable.
+9. [FEATURE_FLAG_PROVIDER] Feature flag provider configured.
+10. [APM_CONFIGURED] APM agent configured on staging.
+11. [STATUS_PAGE] Status page URL configured.
+12. [TOOLS_VALIDATED] All scripts pass syntax checks (node --check, bash -n).
+13. [NO_PROD_URL] No production URL references found in config.
+14. [ARTIFACTS_DIR] artifacts/redesign/ directory created.
+15. [LOCKFILE_CHECK] Package lockfiles examined for known CVEs.
+
+## Rollback
+- If preflight detects blocking issue, print error and halt.
+- If non-critical issues detected, warn but proceed with caution flags.
+- No state changes made during preflight; full reversal always trivial.

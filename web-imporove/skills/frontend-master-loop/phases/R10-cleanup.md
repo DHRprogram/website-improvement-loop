@@ -40,3 +40,25 @@ Remove old code, archive artifacts, and write the final report. Only runs if aut
 - No auto-cleanup consent -> leave old code, log warning.
 - Old code still receiving traffic -> abort cleanup.
 - FINAL_REPORT.md template missing -> write minimal version.
+
+## Checklist
+1. Old code paths removed from source tree.
+2. Archive directory created with backup of deprecated files.
+3. Git history examined — no sensitive data in old commits.
+4. Artifact directory cleaned of stale intermediate files.
+5. COMPOSITION_REGISTRY.json updated to reflect new asset layout.
+6. STATE.json finalized with completion status and timestamp.
+7. FINAL_REPORT.md generated (or placeholder for it to be completed later).
+8. Feature flags that were temporary are cleaned up or archived.
+9. Documentation updated to reflect current state.
+10. Performance baseline compared to preservation snapshot.
+11. Golden test results archived permanently.
+12. Parity gate reports saved alongside golden tests.
+13. Canaries fully rolled back if cutover did not proceed.
+14. Cost delta reported against original budget.
+15. Agent runtime resources released (temp containers, queues).
+
+## Rollback
+- Delete the redesigned branch and checkout main to reverse all changes.
+- Archived old code can be restored from the archive directory.
+- If FINAL_REPORT.md incomplete, note remaining work in HARD_STOP report.

@@ -46,3 +46,25 @@ Route-by-route migration with traffic switching behind feature flags. Each route
 - Route migration fails golden test -> rollback flag, fix, retry.
 - Cross-route regression -> rollback last route.
 - Flag provider down -> retry with exponential backoff.
+
+## Checklist
+1. Strangler proxy configured with traffic routing rules.
+2. Route-by-route mapping from legacy to new implemented.
+3. Feature flags control traffic direction per route.
+4. Session persistence maintained during cutover.
+5. Cache invalidation coordinated between old and new systems.
+6. Redirects configured for migrated routes (SEO safe).
+7. Load balanced between legacy and new instances.
+8. Metrics collected separately for old vs new route serving.
+9. Synthetic monitoring validates both paths simultaneously.
+10. Rollback procedure tested for individual route migration.
+11. DNS TTL reduced ahead of cutover (TTL < 60s).
+12. Rate limiter shared between legacy and new instances.
+13. Audit log captures which version served each request.
+14. Migration progress tracked in STATE.json phase status.
+15. All routes successfully migrated or explicitly deferred.
+
+## Rollback
+- For any single route: flip its feature flag, routing reverts to legacy instantly.
+- Full rollback: set all stragger flags to legacy, wait for DNS propagation.
+- If both old and new have bugs on same route, deploy hotfix to legacy first.

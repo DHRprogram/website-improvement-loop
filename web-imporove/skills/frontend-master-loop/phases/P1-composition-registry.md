@@ -44,12 +44,34 @@ Scan the entire repository for reusable assets (skills, agents, scripts, command
   }
   ```
 
-## Verification Checklist
+## Steps
+1. Walk the repository tree recursively for skills/, .claude/, workflows/, .github/workflows/.
+2. Classify each file by kind using the path pattern rules above.
+3. Parse YAML frontmatter from every .md file found.
+4. Extract callable_via from frontmatter or infer from file extension.
+5. Build the assets array with id, kind, path, description, inputs, outputs.
+6. Rank candidates per phase using keyword match (70%), path proximity (20%), freshness (10%).
+7. Assign internal agent fallbacks where no external match exists.
+8. Write COMPOSITION_REGISTRY.json with scanned_at timestamp.
+9. Validate registry passes JSON.parse and has total_assets >= 1.
+10. Verify every phase R0..R10 has a mapped entry in phases_mapped.
+
+## Checklist
 1. Registry file passes JSON.parse.
 2. total_assets >= 1 (at minimum our own agents are found).
 3. Every phase R0..R10 has a mapped entry (primary or fallback).
 4. Every asset entry has id, kind, path, description.
 5. No path outside repo root.
+6. Frontmatter parsing succeeds for all scanned .md files.
+7. Assets list deduplicated by path.
+8. Skilled entries include callable_via field.
+9. Script entries include language hint (node/shell).
+10. Workflow entries validated against schema.
+11. Ranking scores computed consistently per phase.
+12. Internal agent fallbacks cover all unmapped phases.
+13. COMPOSITION_REGISTRY.json written to artifacts/redesign/.
+14. State.json updated with P1 completion record.
+15. Audit log entry created with scan timestamp and asset count.
 
 ## Mapping Rules
 - R1 Preservation: look for browser/playwright/screenshots skills first.
@@ -70,3 +92,8 @@ Scan the entire repository for reusable assets (skills, agents, scripts, command
 - Zero assets found -> use internal agents only. Warn user.
 - Phase with no suitable asset -> use internal fallback. Log warning.
 - Malformed frontmatter in .md file -> skip file, log error.
+
+## Rollback
+- P1 writes no code changes; reversal means deleting COMPOSITION_REGISTRY.json.
+- If registry is corrupt, clear it and re-run composition-scan.mjs --rescan.
+- On repeated failure after 3 attempts, halt with HST report.

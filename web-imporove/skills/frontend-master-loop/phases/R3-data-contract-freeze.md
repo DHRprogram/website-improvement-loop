@@ -43,3 +43,25 @@ Pin the database schema and API shape. Write data contract document. Guard again
 - DB unreachable -> use R2 extracted schema, log warning.
 - API shape ambiguous -> document known routes, flag unknowns.
 - Schema changes during redesign -> HST-04 if guard detects drift.
+
+## Checklist
+1. Full database schema exported from staging.
+2. API request/response schemas documented per endpoint.
+3. Migration scripts written (up + down) for any pending changes.
+4. Data contract diffed against baseline — zero unexpected drift.
+5. Schema locked via migration constraint or feature flag.
+6. API versioning pinned; breaking changes rejected.
+7. Sample payloads validated against schema.
+8. Backward compatibility audit passed for all public endpoints.
+9. Contract violations would cause build failure (CI integration).
+10. Rollback migration verified independently.
+11. No DDL changes approved without DBA sign-off.
+12. Index strategies documented for performance-sensitive tables.
+13. Foreign key constraints verified for referential integrity.
+14. Enum/value-set changes reviewed for backward compatibility.
+15. Data contract frozen file committed to redesign branch.
+
+## Rollback
+- Unfreeze by running rollback migration (down script).
+- Restore previous schema version from pre-R3 backup.
+- If rollback migration fails, restore from database backup and halt with HST-04.

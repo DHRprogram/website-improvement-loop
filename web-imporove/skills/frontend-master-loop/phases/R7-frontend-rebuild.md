@@ -47,3 +47,25 @@ Rebuild frontend routes using the new design system and component library while 
 - Complex UI behavior -> verify against golden tests.
 - Third-party widgets -> wrap with same interface.
 - a11y gate failure -> HST-10 if critical.
+
+## Checklist
+1. Components rebuilt using new design system tokens.
+2. All interactive elements tested across breakpoints.
+3. Accessibility audit passes WCAG 2.2 AA for new components.
+4. SEO metadata preserved (title, description, Open Graph tags).
+5. Analytics events tracked with same identifiers as legacy.
+6. Bundle size within budget (checked with bundle analyzer).
+7. Lazy loading configured for route-level code splitting.
+8. Error boundaries wrap all route groups.
+9. Loading states match UX specification.
+10. Focus management implemented for keyboard navigation.
+11. Touch targets meet minimum 44x44px for mobile.
+12. Image optimization pipeline active (responsive srcset).
+13. Font loading strategy prevents FOIT/FOUT.
+14. Service worker cache strategy matches performance budget.
+15. New frontend passes all golden visual comparisons.
+
+## Rollback
+- Flip feature flag to disable new frontend; legacy serves content immediately.
+- Clear CDN cache for frontend assets if stale content persists.
+- If critical bug found, roll back deployment and revert git commit.

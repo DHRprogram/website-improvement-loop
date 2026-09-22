@@ -70,14 +70,34 @@ your answers and never ask again unless scope changes.
   }
   ```
 
-## Verification Checklist
-1. All sections present with non-null values.
-2. Autonomy D1 is "yes" (otherwise we cannot proceed autonomously).
-3. Risk E1 is "yes".
-4. Risk E2 is "yes".
-5. Risk E3 is "yes".
+## Steps
+1. Print the Question Form to the user.
+2. Collect answers for Sections A through E.
+3. Validate every field — blank fields trigger re-prompt.
+4. Verify D1 == "yes", all risk acks == "yes". If not, halt.
+5. Build APPROVALS.json with structured data (not raw text answers).
+6. Compute SHA-256 lock hash over the JSON body.
+7. Write APPROVALS.json with locked: true and the hash appended.
+8. Verify APPROVALS.json passes JSON.parse and contains all sections.
+9. Print the lock hash to the console for audit trail.
+10. Store STATE.json current_phase as "P0_complete" and push to completed_phases.
+
+## Checklist
+1. All sections (A–E) present with non-null values.
+2. Autonomy D1 is "yes" (required for autonomous execution).
+3. Risk E1 is "yes" (migrations written but not auto-run).
+4. Risk E2 is "yes" (cutover is paced, not single-shot).
+5. Risk E3 is "yes" (every phase is reversible).
 6. APPROVALS.json parses with JSON.parse.
 7. APPROVALS.json has locked: true.
+8. SHA-256 lock hash computed and included.
+9. Mode value matches one of: strangler, greenfield, bluegreen, design-system.
+10. Routes list validated (comma-separated or "all").
+11. Budgets are positive numbers within reasonable bounds.
+12. Feature flag provider is a known option.
+13. State.json updated with P0 completion record.
+14. No secrets or sensitive URLs leaked to stdout.
+15. Audit log entry created with timestamp and approver identity.
 
 ## Locking
 After writing APPROVALS.json, the file is considered locked. Any later change requires explicit re-approval via --reapprove flag. The skill MUST refuse to proceed if APPROVALS.json exists without locked: true.
@@ -86,3 +106,8 @@ After writing APPROVALS.json, the file is considered locked. Any later change re
 - User answers "no" to D1 -> cannot proceed autonomously. Print: "Autonomous execution not authorized. Switch to manual mode or restart with approval."
 - User answers "no" to any risk acknowledgement -> cannot proceed. Print the specific requirement.
 - User leaves fields blank -> re-prompt only the blank fields.
+
+## Rollback
+- P0 creates no code changes; reversal means deleting APPROVALS.json and running again.
+- On invalid answers that cannot be resolved after 3 attempts, write HARD_STOP report and halt.
+- On --reapprove: compare new hash against existing lock hash; warn user if scope changed significantly.

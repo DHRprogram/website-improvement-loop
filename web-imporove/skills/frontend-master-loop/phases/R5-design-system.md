@@ -42,3 +42,25 @@ Build or apply design tokens and component library. Generate the CSS variables, 
 13. Semantic tokens reference primitive tokens.
 14. Token naming convention consistent.
 15. Accessibility contrast ratios satisfied with new palette.
+
+## Checklist
+1. Design tokens extracted from approval specifications.
+2. Color palette meets WCAG 2.2 AA contrast requirements.
+3. Typography scale defined (h1-h6, body, caption, mono).
+4. Spacing system standardized (4px grid).
+5. Component library scaffolded with TypeScript types.
+6. Theme provider configured for light/dark mode.
+7. CSS custom properties mapped to design tokens.
+8. Existing components analyzed for design system compliance.
+9. Non-compliant components flagged for rebuild in R7.
+10. Token values validated against APPROVALS.json budgets.
+11. Design system package built and tested independently.
+12. Storybook documentation generated (if applicable).
+13. No hardcoded colors anywhere in the component library.
+14. Responsive variants tested at mobile/tablet/desktop breakpoints.
+15. Build pipeline includes design token compilation step.
+
+## Rollback
+- Revert design token changes and restore previous theme variables.
+- Delete component library directory and switch back to inline styles.
+- If build breaks due to missing tokens, clear artifacts and regenerate.

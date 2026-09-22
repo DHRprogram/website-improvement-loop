@@ -45,3 +45,24 @@ Extract data contracts, component tree, route map, API endpoints, and design tok
 - No router config found -> infer from file tree.
 - No type definitions found -> extract from runtime usage.
 - No i18n files found -> single-locale assumed.
+
+## Checklist
+1. [SCHEMA_EXTRACTED] Database schema fully extracted from staging.
+2. [API_CONTRACTS] All public API contracts documented.
+3. [COMPONENT_TREE] React/Vue/Angular component tree mapped.
+4. [ROUTE_MAP] Route-to-component mapping complete.
+5. [TYPE_DEFINITIONS] TypeScript types (or equivalent) inventoried.
+6. [ENV_VARS] All environment variables catalogued.
+7. [DEPENDENCY_GRAPH] Internal dependency graph generated.
+8. [DATA_FLOWS] Data flow diagrams produced for complex features.
+9. [AUTH_SCHEME] Authentication/authorization flow documented.
+10. [CACHE_STRATEGY] Caching layers identified.
+11. [CDN_CONFIG] CDN configuration preserved.
+12. [WEBHOOKS] All webhook endpoints enumerated.
+13. [RATE_LIMITS] Current rate limits documented.
+14. [VERSION_API] API versioning strategy recorded.
+15. [ERROR_FORMATS] Error response formats standardized.
+
+## Rollback
+- R2 writes SPEC.json; this is reference-only. Reversible by deleting SPEC.json.
+- If extraction corrupts output, clear artifacts/redesign/SPEC.json and re-run.

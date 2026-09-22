@@ -49,3 +49,25 @@ Record per-route golden tests (visual + behavioral) against the existing site be
 - Route not accessible -> test error page, log.
 - Dynamic content (real data) -> test with known fixtures/stubs.
 - 3rd-party widgets -> mock or skip with annotation.
+
+## Checklist
+1. Screenshot taken for every route (full page + viewport at 3 breakpoints).
+2. DOM structure hash computed and stored per route.
+3. Network requests logged with URLs, methods, status codes.
+4. Console messages captured — no errors present.
+5. AXe accessibility scan run on each route.
+6. LCP, FID, CLS measured and stored as baseline.
+7. Interactive element states recorded (hover, focus, disabled).
+8. Form validation behavior tested and documented.
+9. SPA navigation paths traversed and recorded.
+10. Route-level golden tests stored as separate JSON files.
+11. Visual comparison baseline images checked into git.
+12. Golden test runner script validated (node --check passes).
+13. Test data isolated (no production data used).
+14. Golden test results included in ARTIFACTS directory.
+15. All golden tests pass before any code changes begin.
+
+## Rollback
+- Golden tests read-only; no code changes made during collection.
+- If browser automation fails after 3 attempts, save partial baseline and continue.
+- Remove snapshots directory and re-run if corruption detected.

@@ -45,3 +45,24 @@ Capture baseline screenshots of every in-scope route, record Core Web Vitals met
 - Server won't start -> retry with alternative port (max 3).
 - Route returns 404 -> log as error, capture error page.
 - DevTools protocol not available -> skip component tree, log warning.
+
+## Checklist
+1. [SCREENSHOT_ALL] All routes captured (full page + viewport).
+2. [METRICS_BASELINE] Performance metrics recorded per route.
+3. [DOM_HASH] DOM structure hash computed for each route.
+4. [NETWORK_RECORD] Network requests logged per route.
+5. [CONSOLE_CHECK] No console errors on any route.
+6. [ACCESSIBILITY_TREE] AXe accessibility tree captured per route.
+7. [PERFORMANCE_MARKS] LCP, FID, CLS measured and saved.
+8. [API_RESPONSES] API response shapes documented.
+9. [DATA_SNAPSHOT] Sample data exported from staging DB (no PII).
+10. [CONFIG_CAPTURE] Runtime configuration dumped to STATE.json.
+11. [ROUTE_MAP] Complete route map generated.
+12. [ASSET_MANIFEST] Static asset inventory created.
+13. [SEO_METADATA] Existing SEO metadata captured.
+14. [ANALYTICS_EVENTS] Existing analytics events enumerated.
+15. [INTEGRATIONS_LIST] Third-party integrations documented.
+
+## Rollback
+- R1 makes no changes to codebase — it only reads. Full reversal trivial.
+- If browser automation fails, retry 3 times then halt with HST report.
