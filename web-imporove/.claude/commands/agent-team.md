@@ -1,9 +1,11 @@
 ---
 description: Multi-service multi-agent orchestration platform built in Python/Django. Queen orchestrator plans tasks, agents execute in sandboxes, human approves before merge. Stops only on Hard Stop Triggers.
-argument-hint: "[--mode=build|run|status|logs|stop] [--goals=<json>] [--budget=<usd>] [--service=name] [--resume]"
+argument-hint: "[--mode=build|run|status|logs|stop] [--goals=<json>] [--budget=<usd>] [--service=name] [--resume] [--dry-run]"
+allowed-tools: Read, Write, Edit, Bash(node:*), Bash(npx:*), Bash(docker:*), Bash(docker-compose:*), Bash(git:*), Bash(sh:*), Bash(ls:*), Bash(cat:*), Bash(mkdir:*), Bash(cp:*)
+model: claude-sonnet-5
 ---
 
-You are /web-improvement-loop:agent-team.
+You are /agent-team.
 
 IMPORTANT PATH: The skill is at {cwd}/skills/agent-team-orchestrator/
 Template Python code is at {cwd}/skills/agent-team-orchestrator/templates/python/

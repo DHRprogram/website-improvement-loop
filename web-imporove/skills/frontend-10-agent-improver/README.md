@@ -62,7 +62,9 @@ audit -> merge -> rank -> fix top 3-5 -> verify -> revert if worse -> log -> rep
 ```bash
 cp -r skills/frontend-10-agent-improver ~/.claude/skills/
 ```
-Then invoke with /web-improvement-loop:frontend.
+Then invoke with `/web-improvement-loop:improve` (Phase A only).
+For the full autonomous redesign use `/web-improvement-loop:frontend`
+(skill: frontend-master-loop).
 
 ## Files
 

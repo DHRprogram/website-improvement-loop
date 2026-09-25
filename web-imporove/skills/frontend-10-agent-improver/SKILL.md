@@ -7,7 +7,9 @@ description: >-
   and frontend tests. Runs audit -> merge -> rank -> fix top 3-5 -> verify ->
   revert if worse -> log, with measurable before/after metrics, a strict
   no-backend guardrail, and no human intervention. Invoked via
-  /web-improvement-loop:frontend. Use when asked to improve the frontend,
+  /web-improvement-loop:improve (this skill is the Phase A engine of the
+  web-improvement-loop family; the full autonomous redesign is the separate
+  frontend-master-loop skill behind /web-improvement-loop:frontend). Use when asked to improve the frontend,
   audit the UI, run autonomous frontend improvements, or fix the frontend
   automatically.
 ---
