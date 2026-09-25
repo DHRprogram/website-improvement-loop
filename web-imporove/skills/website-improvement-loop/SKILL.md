@@ -1,79 +1,116 @@
 ---
 name: website-improvement-loop
 description: >-
-  Audits a website codebase, improves it over 10 measurable iterations,
-  runs 12 synthetic users through Chrome (10 demographic personas +
-  1 adversarial chaos tester + 1 axe-core accessibility auditor) using
-  only visible UI, ideates and pitches product features that turn an MVP
-  into a real product, and after explicit user approval builds them to a
-  strict Product Quality Bar. Includes a Regression Guard that prevents
-  metrics from getting worse and a CI gate. Use when asked to "improve my
-  site", "review the codebase", "find where we went wrong", "give me
-  product ideas", "run user tests", "make it a real product", or to run
-  repeated improvement cycles.
+  A complete website improvement system: audits, improves over 10 measurable
+  iterations, runs 12 synthetic users through Chrome (10 demographic personas
+  + 1 adversarial chaos tester + 1 axe-core accessibility auditor) using only
+  visible UI, ideates and pitches product features that turn an MVP into a
+  real product, and after explicit user approval builds them to a strict
+  Product Quality Bar. Includes a 10-agent parallel architecture, Stop
+  Hook-driven self-evolving loop, STATE.md external memory, Focus Modes,
+  Regression Guard, HTML report, CI gate, and a Redesign subcommand with
+  Strangler Fig migration. Use when asked to improve a site, review the
+  codebase, run user tests, make it a real product, redesign a site, or
+  run repeated improvement cycles.
 ---
 
 # Website Improvement Loop
 
-## Phase Summary
+## 1. The five phases
 
-- **Phase A — Improve**: 10 iterations of codebase improvement with before/after measurement.
-- **Phase B — Synthetic User Testing**: 12 personas through Chrome via visible UI only.
-- **Phase C — Ideate**: 15–25 ideas distilled to 8–12 pitches ready for decision.
-- **Phase D — Approval**: Present pitches to user, full stop until explicit approval.
-- **Phase E — Build**: Build only approved ideas to Product Quality Bar.
-- **Regression Guard**: CI gate that prevents metric degradation.
+| Phase | Name | Does | Gate |
+|-------|------|------|------|
+| A | Improve | 10 iterations, 10 subagents in parallel, measured before/after | Regression Guard |
+| B | Test | 12 personas through a real browser, visible UI only | P0/P1 escalated |
+| C | Ideate | 15–25 ideas distilled to 8–12 evidence-backed pitches | — |
+| D | Approve | Present pitches, record the answer verbatim | **HARD STOP** |
+| E | Build | Approved ideas only, to the Product Quality Bar | Regression Guard |
 
-## Guardrails
+Phase D is a hard stop. A high ROI score is not consent.
 
-1. Never commit secrets, tokens, or keys. Never print secret values.
-2. Never destroy databases or delete users.
-3. Never change auth, payments, or DB schema without explicit user approval.
-4. Each iteration = one small, revertible change.
-5. If build/test fails and cannot be resolved in <10 minutes → git revert.
-6. Respect the project's design system, naming conventions, and folder structure.
-7. If no test/build exists, create a smoke test first.
-8. In Phase B/C, never start building. Wait for explicit approval in Phase D.
-9. Never make destructive changes to production data.
-10. Every commit message must reference the phase and iteration.
+## 2. Three-layer architecture
 
-## Setup Questions (ask once at start)
+```
+L1  Orchestrator      scripts/orchestrator.mjs — owns the iteration
+                     STATE read → spawn → merge → rank → fix → verify → write
+L2  Subagents        agents/S1..S10 — 10 read-heavy auditors, parallel per
+                     iteration, each with isolated context and one narrow job
+L3  Guards + Metrics hooks/, scripts/guards/, scripts/measure.sh — the only
+                     things allowed to say "no"
+```
 
-1. Target user in one sentence?
-2. Primary business goal (signup, revenue, retention, ...)?
-3. Constraints: framework lock-in, deadline, brand rules, must-keep features?
-4. Which ideas can touch auth/payments/DB schema?
-5. BASE_URL for testing?
-6. Is login required and with which ENV var? (Never print the value)
-7. Budget cap in USD for Phase E builds? (default: unlimited)
-   Use `--budget 50` to cap total build cost. Pitches exceeding remaining budget are deferred.
+Each layer has exactly one job. The orchestrator never audits, an agent never
+commits, and a guard never fixes. A finding that reaches the orchestrator has
+already been deduplicated and ranked.
 
-   If unanswered: write reasonable assumptions in AUDIT_BASELINE.md > Assumptions and proceed.
+### The 10 subagents
 
-## Phase A — Improve (exactly 10 iterations)
+| # | Agent | Owns | Primary metric |
+|---|-------|------|----------------|
+| S1 | Bug Hunter | logic bugs, races, runtime errors, dead code | `runtime_errors` |
+| S2 | Design Critic | design-system conformance, spacing, typography, colour | `design_system_violations` |
+| S3 | UX Auditor | loading/empty/error states, microcopy, flow | `ux_state_gaps` |
+| S4 | Perf Engineer | bundle, LCP, CLS, INP, re-render, lazy loading | `bundle_kb` |
+| S5 | A11y Auditor | axe-core, keyboard, focus, contrast, ARIA | `axe_critical` |
+| S6 | Test Guardian | coverage, flaky tests, untested critical paths | `critical_path_coverage` |
+| S7 | SEO Auditor | meta, Open Graph, heading order, structured data | `meta_coverage` |
+| S8 | Security Scanner | XSS, CSRF, secrets in client bundles, validation gaps | `xss_risks` |
+| S9 | Architecture Reviewer | coupling, duplication, dead code | `coupling_violations` |
+| S10 | Mobile Auditor | responsive layout, touch targets, overflow, breakpoints | `responsive_violations` |
 
-#### --ghost mode
-Pass `--ghost` for read-only audit. Generates AUDIT_BASELINE.md, IMPROVEMENT_LOG.md (empty), runs Phase B axe audit, and Phase C ideation — without modifying any source file. Use for code review or pre-PR check.
+All 10 run in parallel every iteration. A focus mode runs a subset; the full
+mode runs all 10.
+
+## 3. Guardrails
+
+1. Never commit, print, echo or log a secret, token or key.
+2. Never work on `main` or `master`. Never force-push or rewrite shared history.
+3. One iteration = one revertible commit. Never bundle two ideas.
+4. Process at most 5 findings per iteration.
+5. If a metric gets worse, revert that commit. Never loosen a threshold to
+   make a regression pass.
+6. Never change auth, payments or DB schema without explicit user approval.
+7. Never delete user data or run a destructive migration.
+8. If the build or tests fail and cannot be fixed within 10 minutes, revert.
+9. Respect the project's existing design system, naming and folder structure.
+   If no test or build exists, create a smoke test before changing anything.
+10. Never write outside the project root. Never fabricate a measurement — a
+    tool that is absent reports `null`, which is not the same as zero.
+
+## 4. Setup questions (ask once)
+
+1. Target user, in one sentence?
+2. Primary business goal — signup, revenue, retention, something else?
+3. Constraints and budget: framework lock-in, deadline, brand rules,
+   must-keep features, and the Phase E spend cap in USD?
+4. Which changes are allowed to touch auth, payments or DB schema?
+5. `BASE_URL` for browser testing?
+6. Is login required, and under which ENV var name? (Name only — never the
+   value.)
+
+Skipped answers become explicit assumptions in `AUDIT_BASELINE.md`. They never
+block the run.
+
+## 5. Phase A — Improve
 
 ### A0 Recon
-Create AUDIT_BASELINE.md with: stack, structure, routes, components, API layer, DB models, assets, i18n, tests, CI, build/run commands, and metrics snapshot from scripts/measure.sh.
+
+Write `AUDIT_BASELINE.md`: stack, structure, routes, components, API layer,
+data models, assets, i18n, tests, CI, build and run commands, plus a metrics
+snapshot.
+
+```bash
+STACK=$(bash scripts/measure.sh . --stack-only)
+bash scripts/measure.sh baseline > metrics/baseline.json
+```
+
+`measure.sh` is the single source of truth for stack detection. Never
+re-implement marker-file checks.
 
 ### A1 Baseline scoring
-Score 0–10 on 9 dimensions using the rubric below. Record in AUDIT_BASELINE.md.
 
-### A2 Loop
+Score 0–10 across nine weighted dimensions:
 
-#### --fast mode (single iteration)
-Pass `--fast` to skip the 10-iteration loop and run exactly 1 AUDIT → RANK → FIX → SCORE cycle.
-Useful for quick smoke improvement without committing to the full loop.
-Output: one finding, one fix, one score delta — enough to decide if full loop is worth it.
-
-For each iteration: AUDIT → RANK → PLAN → IMPLEMENT → VERIFY → LOG → SCORE.
-Each finding has: id, severity P0–P3, evidence (file:line or URL + measurement), impact, effort, fix sketch.
-Priority = severity × impact ÷ effort. Top 3–5 per round.
-If metric does not improve: revert or fix.
-
-### A3 Rubric
 | # | Dimension | Weight |
 |---|-----------|--------|
 | 1 | Correctness & bugs | 20 |
@@ -86,171 +123,241 @@ If metric does not improve: revert or fix.
 | 8 | Resilience | 5 |
 | 9 | Mobile & responsive | 5 |
 
-Total = Σ(score × weight) / 10. Record baseline → final.
+`rubric_total` = Σ(score × weight) ÷ 10.
 
-### A4 Misuse hunt
-Cover: state, effects, data fetching, caching, DB queries, forms, styling, routing, error handling, auth, env config, dependencies. Output table with Area, Misuse, Evidence, Correct usage, Fix.
+### A2 The loop
 
-### A5 Early exit
+```bash
+node scripts/orchestrator.mjs --focus=full --max-iterations 10 --min-severity P2
+```
 
-#### Auto-revert on score drop
-If any iteration causes the rubric total to decrease vs the previous iteration:
-  1. Detection: compare score before/after iteration
-  2. Action: \`git revert HEAD\` automatically
-  3. Log: record the failed attempt in IMPROVEMENT_LOG.md as \`AUTO-REVERT: [finding] — score dropped from X to Y\`
-  4. Bump: move to next finding. Do not retry the same approach.
+Each iteration: AUDIT → RANK → PLAN → IMPLEMENT → VERIFY → LOG → SCORE.
 
-Only if no finding above P3 remains AND last 2 iterations moved <1 point. If exited early, document reason in FINAL_REPORT.md.
+**Priority** = `severity_weight × impact ÷ effort`
 
-### A6 Artifacts
-AUDIT_BASELINE.md, IMPROVEMENT_LOG.md, IDEA_BACKLOG.md, metrics/*.json.
+| Severity | Weight | Meaning |
+|----------|--------|---------|
+| P0 | 1000 | blocking: data loss, security hole, unusable |
+| P1 | 300 | critical: main flow broken for many users |
+| P2 | 100 | major: real friction on a secondary path |
+| P3 | 30 | minor: polish |
 
-## Phase B — Synthetic User Testing (12 personas via Chrome)
+`impact` is 1–5, `effort` is 1–5 (S=1, M=3, L=5). Top 3–5 per iteration.
 
-#### --spotlight <url>
-Run a deep analysis on a single URL. 20 iterations (vs 10), 4 personas focused on that page, 15 adversarial attacks targeting that page's inputs and interactions. Overrides the default route list.
+If a metric does not improve, revert and move on. Do not retry the same
+approach twice on the same finding.
 
-### B0 Prerequisites
+### A3 Rubric and artifacts
 
-#### --resume flag
-Pass  to continue from the last checkpoint instead of starting Phase B from scratch.
-Checkpoints saved in  after each persona.
-Resume restores: completed personas list, current persona index, task progress.
+Artifacts: `AUDIT_BASELINE.md`, `IMPROVEMENT_LOG.md`, `IDEA_BACKLOG.md`,
+`metrics/*.json`, `artifacts/website-loop/STATE.md`.
 
+## 6. Phase B — Synthetic user testing
 
+12 personas: 10 demographic (P01–P10), 1 adversarial chaos tester (P11),
+1 axe-core accessibility auditor (P12). Full definitions in
+`references/personas.md`; protocol in `references/user-test-protocol.md`.
 
-#### --parallel N flag
-Pass `--parallel 3` to run personas in 3 parallel browser contexts instead of serially.
-Reduces wall time: 12 personas × ~3min each → ~12min with --parallel 3.
-Each context is fully isolated (cookies, storage, viewport).
-Collision detection built-in: if two personas hit the same form, the second waits 500ms.
+**Non-negotiable protocol rules:**
 
-Browser driver MCP. Order: Chrome DevTools MCP → Playwright MCP → local Playwright script.
-If none available: stop and instruct user. Do not fabricate this phase.
+- Click only visible elements: button, link, input, select, checkbox, tab, menu.
+- Select only by role, text or accessible label.
+- Enter only from `BASE_URL`; navigate only by clicking visible links.
+- Forbidden: `goto` on a deep URL, `page.evaluate`, DOM surgery, CSS
+  selectors, XPath, overlay removal, synthetic event dispatch.
+- If a task cannot be completed through the visible UI, that is a finding with
+  severity ≥ P2 — not permission to bypass the UI.
+- Fresh isolated browser context per persona; screenshot every step; close the
+  context afterwards.
+- Respect persona patience. A loader that outlasts it is a finding.
 
-### B1 Personas
-Full personas in references/personas.md (P01–P12).
+P12 runs axe over the site. Any `critical` violation is a P0 and halts the
+phase. P11 attacks from `references/adversarial-playbook.md`; any reproducible
+S0 halts the phase and escalates to the user immediately.
 
-### B1-bis P12 — Accessibility Auditor
-Routes: analytics → sitemap → top 5 internal-linked routes.
-Run: `node scripts/user-test/run-axe.mjs "$BASE_URL" / /pricing /login /contact`
-Output: axe/*.json, axe/summary.json, axe/P12_A11Y.md.
-P12 is the only persona allowed to use evaluate/AX API — read-only DOM, never for mutations.
-Any axe critical (P0) → halt Phase B + escalate.
+Output: `USER_TEST_REPORT.md` with the executive summary, theme table, per-
+persona summaries with verbatim quotes, top 10 friction points, adversarial
+results, axe results, and a section on what was **not** tested and why.
 
-### B2 Protocol
-Full protocol in references/user-test-protocol.md. Non-negotiable:
-- Only visible elements: button, link, input, select, checkbox, tab, menu.
-- Selector only by role/text/label.
-- Entry only from BASE_URL. All navigation by clicking visible links.
-- Forbidden: goto on deep URL, page.evaluate, DOM surgery, CSS selector, XPath, overlay removal, synthetic event dispatch.
-- If element not found via visible affordances → finding with severity ≥ P2.
-- Respect persona patience. If loader exceeds patience → finding.
-- Screenshot every step: artifacts/USER_TEST/shots/persona-NN/step-MM.png.
-- Friction score per step: 0 / 1 / 2 / 3.
-- Fresh browser context per persona. Isolated cookies/storage.
-- Close context after each persona.
+## 7. Phase C — Ideate
 
-### B3 Tasks
-Write 3–5 tasks per persona before opening browser. Store in USER_TEST/persona-NN.tasks.md.
+Sources: activation, retention, conversion, content and SEO, trust and social
+proof, distribution, support, monetization, and "you already have the data"
+(highest ROI, because the data exists already).
 
-### B4 Execution
-Run each persona NN=01..12. Output: USER_TEST/persona-NN.json per findings.schema.json.
+Drop an idea if it has no success metric, needs a rewrite, adds more than one
+external dependency, duplicates another, or is purely cosmetic while the
+baseline is already ≥ 8.
 
-### B4-bis Halt rule
-If P11 has any reproducible S0 → halt Phase B, escalate to user immediately with attack_id, repro, screenshot, impact, and one-line fix. Add to IMPROVEMENT_LOG.md as P0. Run Phase A2-bis (max 3 iterations) to fix. Re-run attack. Then continue.
+`ROI` = (success_metric_impact × user_reach) ÷ effort, effort S=1 M=3 L=8.
 
-### B5 Synthesis
-Create USER_TEST_REPORT.md containing:
-1. Executive summary (top 5 blockers)
-2. Table: theme | pages | personas | severity | frequency | evidence
-3. Per-persona summary + top 3 quotes (first-person, honest)
-4. Top 10 friction points as ready-to-file issues
-5. Adversarial section: table of ID | target | severity | reproduced | passes | fix + Top 5 "would embarrass us in production" + untested attacks + flaky list
-6. P12 a11y section: table of Sev | Rule | Impact | Target | Routes | Fix
-7. "What was NOT tested and why" (honesty section)
+Pitch the top 8–12 per `references/idea-pitch-format.md`. Every pitch cites at
+least one Phase B finding. Then STOP.
 
-### B6 Feed forward
-P0/P1/P2 findings → IMPROVEMENT_LOG.md. If fixes needed, Phase A2-bis (max 5 iterations) before C. Recurring themes as seeds for Phase C.
+## 8. Phase D — Approval (hard stop)
 
-### B7 Regression Guard
-1. First run after Phase A: `node scripts/user-test/baseline-save.mjs` → artifacts/BASELINE.json. Commit.
-2. Subsequent runs: `node scripts/user-test/baseline-check.mjs`. Thresholds: overall friction +Δ>0.15 FAIL • new P0/P1 FAIL • new S0/S1 FAIL • new axe critical or >2 serious FAIL • per-persona friction +Δ>0.30 FAIL.
-3. On regression: do not loosen thresholds, do not re-baseline. Fix cause, re-run Phase B, re-baseline only with explicit approval.
-4. CI: scripts/ci/regression-gate.sh on every PR.
-5. Re-baseline requires explicit approval. Log in FINAL_REPORT.md > Baseline changes with date/reason/approved_by.
+Ask exactly four questions:
 
-## Phase C — Ideate
+1. Which ideas should be built? (numbers, "all", or "none")
+2. Which should be changed or merged?
+3. If only a few, in what order?
+4. Build constraints — auth? DB? payments?
 
-#### ROI scoring
-Each pitch is auto-ranked by ROI = (success_metric_impact × user_reach) / effort.
-- success_metric_impact: estimated % improvement to the business goal
-- user_reach: % of users affected
-- effort: S=1, M=3, L=8
-ROI displayed in IDEA_PITCHES.md. Top 3 by ROI recommended first.
+Record the response verbatim in `APPROVED_IDEAS.md` with a timestamp. Edit no
+source file in this phase.
 
+## 9. Phase E — Build
 
+Every shipped idea must clear the full Product Quality Bar
+(`references/product-quality-bar.md`): UI/UX, all six states (loading, empty,
+error, success, offline, slow), accessibility, measured performance
+before/after, real copy, an analytics event for the success metric, SEO for
+new routes, server-side validation and authz, tests, docs, and a one-commit
+rollback. An unmet clause means the idea is not done.
 
-### C1 Sources
-Activation, Retention, Conversion, Content & SEO, Trust & Social proof, Distribution, Support & Success, Monetization, "already have the data" (highest ROI). Full in references/ideas.md.
+Per idea: PLAN → BASELINE → IMPLEMENT → VERIFY → SHIP-LOG → CONFIRM. After
+each, re-run the 3 most relevant personas and the Regression Guard.
 
-### C2 Filter
-Drop if: no success metric, needs rewrite, >1 external dependency, duplicate, or purely cosmetic and baseline score ≥8.
+When all ideas are done, re-run the Phase A rubric and write `FINAL_REPORT.md`.
 
-### C3 Pitch
-Each pitch per references/idea-pitch-format.md. Each must reference at least one Phase B finding. Ideas without evidence must be explicitly justified. Store in IDEA_PITCHES.md + add to IDEA_BACKLOG.md.
+## 10. Focus modes
 
-### C4 Present & STOP
-Ask exactly:
-> 1. Which ideas should I build? (numbers, "all", or "none")
-> 2. Which to change or merge?
-> 3. If only a few, priority order?
-> 4. Build constraints? (auth? DB? payments?)
+| Mode | Subagents | Primary metric | Secondary metrics |
+|------|-----------|----------------|-------------------|
+| `full` | S1–S10 | `rubric_total` | all |
+| `design` | S2,S3,S5,S10 | `design_system_violations` | `spacing_inconsistencies`, `typography_violations` |
+| `bugs` | S1,S6 | `runtime_errors` | `logic_bugs`, `race_conditions` |
+| `perf` | S4 | `bundle_kb` | `lcp_ms`, `cls_score`, `inp_ms` |
+| `a11y` | S3,S5 | `axe_critical` | `axe_serious`, `contrast_failures` |
+| `security` | S8 | `xss_risks` | `csrf_risks`, `secrets_in_client` |
+| `seo` | S7 | `meta_coverage` | `og_coverage`, `heading_order_violations` |
+| `frontend` | S2,S3,S4,S5,S7,S10 | `rubric_total` | `bundle_kb`, `axe_critical` |
+| `backend` | S1,S6,S8,S9 | `runtime_errors` | `coupling_violations`, `critical_path_coverage` |
+| `redesign` | S1,S2,S5,S8,S9 | `parity_violations` | `runtime_errors`, `axe_critical` |
 
-Then STOP. Do not edit code. Wait for response.
-If "all": build by impact÷effort order, smallest first, max 5, get approval before continuing.
+```bash
+node scripts/focus-resolver.mjs --focus=design   # subagents + metrics
+node scripts/focus-resolver.mjs --list           # all modes
+```
 
-## Phase D — Approval
+An unknown mode exits 2. It never falls back to `full`.
 
-- Record user response verbatim in APPROVED_IDEAS.md with timestamp.
-- For each idea: goal, success metric, scope in/out, likely files, risks, detailed acceptance criteria.
-- Re-confirm only if auth/payments/DB schema is touched.
+## 11. The Stop Hook
 
-## Phase E — Build
+`hooks/stop-hook.sh` runs on every Claude stop. It reads `STATE.md` and decides
+whether the loop is finished.
 
-### E1 Product Quality Bar
-Full in references/product-quality-bar.md. Every shipped idea must have:
-UI/UX, States (loading/empty/error/success/offline/slow), A11y (semantic, keyboard, focus visible, labels, contrast AA), Perf (no blocking JS new, images sized/lazy, LCP/CLS before/after), Copy (real, no lorem), Analytics (event for metric), SEO (if new route), Security (server-side validation + authz), Tests (unit + e2e/smoke), Docs, Rollback (one revertible commit).
-If any clause unmet, idea is not done.
+```
+exit 0  -> the loop is done, Claude may stop
+exit 2  -> work remains, Claude must continue
+```
 
-### E2 Loop
+`hooks/check-stop.sh` returns 0 when **any** of these hold:
 
-#### --dry-run
-Pass `--dry-run` before building to show the planned diff without touching files.
-Output: list of files changed, estimated token cost, acceptance criteria check.
-If scope creep is detected (>30% more files than estimated), flag it.
+| Condition | Test |
+|-----------|------|
+| Iteration cap | `iteration_count >= max_iterations` |
+| Nothing left | no open finding at or above `min_severity` |
+| Plateau | 5 consecutive iterations with no metric improvement |
+| Repeated failure | 3 consecutive iterations that errored |
+| Human stop | `artifacts/website-loop/STOP` exists |
 
-PLAN → BASELINE → IMPLEMENT → VERIFY → SHIP-LOG → CONFIRM.
+The hook is advisory, not magic: it cannot make Claude continue forever if the
+work is genuinely impossible. That is what the 3-consecutive-error condition is
+for.
 
-### E3 After all
-Re-run Phase A rubric. Write FINAL_REPORT.md.
+## 12. STATE.md schema
 
-### E4 Post-build regression check after each idea
-1. Re-run 3 most relevant personas.
-2. Axe on new/changed route.
-3. `node scripts/user-test/baseline-check.mjs`.
-4. If FAIL: revert or fix. Never ship-and-hope.
-5. Delta in BUILD_LOG.md.
+`STATE.md` is the loop's external memory. It is read at the top of every
+iteration and rewritten at the bottom. Never delete it; never let a phase
+rebuild it from scratch.
 
-## Artifact Rules
+```yaml
+---
+iteration_count: 7
+max_iterations: 10
+min_severity: P2
+active_focus: full
+baseline:
+  rubric_total: 6.2
+  bundle_kb: 412
+  axe_critical: 3
+current:
+  rubric_total: 7.4
+  bundle_kb: 388
+  axe_critical: 0
+deltas:
+  rubric_total: 1.2
+  bundle_kb: -24
+  axe_critical: -3
+findings:
+  open: 4
+  fixed: 11
+  reverted: 2
+  blocked_backend: 0
+no_improvement_streak: 0
+consecutive_errors: 0
+lessons_learned:
+  - "Bundle drop came from dropping the date library, not from tree-shaking."
+stop_condition: none
+stop_reason: ""
+stopped: false
+last_updated: 2026-09-25T08:14:03Z
+---
+```
 
-- Each phase writes its files before starting the next phase.
-- metrics/ contains one JSON per measurement.
-- Previous log is never deleted, only appended with timestamp.
+Manage it with:
 
-## Interaction Rules
+```bash
+node scripts/state-manager.mjs init   --focus=full --max-iterations 10 --min-severity P2
+node scripts/state-manager.mjs read
+node scripts/state-manager.mjs update --iteration-done --finding-fixed
+```
 
-- Setup questions: once.
-- Present pitches and STOP.
-- Re-confirm only for auth/payments/schema.
-- Otherwise run to completion and report at end.
+## 13. Regression Guard
+
+```bash
+bash scripts/verify-change.sh <metric> <lower|better|higher>
+bash scripts/guards/metric-must-improve.sh <metric> <before> <after>
+```
+
+Compares only keys present in both snapshots. A `null` in either is skipped —
+`null` means the tool is absent, and a fabricated `0` would make every guard
+pass silently. Re-baselining requires explicit approval and is recorded with
+date, reason and approver.
+
+## 14. Redesign (R0 → R10)
+
+`/web-improvement-loop:redesign`. Modes: `strangler` (default), `greenfield`,
+`bluegreen`, `design-system`.
+
+| Phase | Name | Output |
+|-------|------|--------|
+| R0 | Preflight | `REDESIGN_BRIEF.md` — is a redesign even correct? |
+| R1 | Preservation Harness | `PRESERVATION.json` — current behaviour, captured |
+| R2 | Spec extraction | `SPEC.md` — behaviour derived from code |
+| R3 | Data Contract Freeze | `DATA_CONTRACT.json` — pinned, read-only afterwards |
+| R4 | Golden Tests | `GOLDEN/` — green against the OLD system first |
+| R5 | Design system | `DESIGN_SYSTEM.md` + tokens |
+| R6 | Backend rebuild | new service, own tests |
+| R7 | Frontend rebuild | new UI against R5 and R6 |
+| R8 | Strangler migration | routes move one at a time behind a flag |
+| R9 | Canary cutover | **requires explicit user approval** |
+| R10 | Cleanup | **requires explicit user approval** |
+
+A golden test that was never green against the old implementation is not a
+golden test. At every point from R8 on, rollback is one flag flip.
+
+## 15. Non-goals
+
+- **Not a security audit.** S8 catches the obvious client-side holes; it is not
+  a penetration test and does not replace one.
+- **Not a rewrite.** Phase A improves the code that exists. Use
+  `/web-improvement-loop:redesign` when replacement is the actual answer.
+- **Not a substitute for a human product decision.** Phase C proposes; a person
+  decides.
+- **Not offline-capable.** Phase B needs a real browser. Without one, it stops
+  and says so rather than simulating results.
+- **Not a CI replacement for tests.** The Regression Guard blocks degradation;
+  it does not write your test suite.
+- **Not multi-tenant.** One project, one branch, one loop at a time.

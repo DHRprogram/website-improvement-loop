@@ -1,0 +1,34 @@
+{
+  "id": "F-S1-0001",
+  "agent": "S1",
+  "severity": "P0",
+  "title": "Checkout double-charges when the pay button is double-clicked",
+  "evidence": [
+    {
+      "file": "src/pages/checkout/PayButton.tsx",
+      "line": 48,
+      "snippet": "const onPay = async () => {\n  setPending(true);\n  const res = await fetch('/api/checkout', { method: 'POST', body });\n  setPending(false);\n};",
+      "measurement": "No in-flight guard: 2 requests observed in 1.2s in the staging replay, 1 charge each"
+    },
+    {
+      "file": "src/pages/checkout/PayButton.tsx",
+      "line": 61,
+      "snippet": "<button onClick={onPay} disabled={pending}>Pay</button>",
+      "measurement": "disabled is set from a state update, so a second click lands before React re-renders"
+    }
+  ],
+  "impact": 5,
+  "effort": 3,
+  "fix_sketch": "Add a ref-based in-flight guard that flips synchronously on entry, before the first await, so a second click is dropped even if React has not re-rendered yet. The disabled attribute stays for the visual, but the ref is what actually prevents the duplicate request.",
+  "metric": {
+    "name": "duplicate_charge_attempts",
+    "before": 2,
+    "after_null_ok": 0,
+    "unit": "occurrences"
+  },
+  "files_touched": [
+    "src/pages/checkout/PayButton.tsx",
+    "tests/checkout/PayButton.test.tsx"
+  ],
+  "status": "open"
+}

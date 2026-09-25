@@ -1,0 +1,137 @@
+# Nightly regression sweep for the website-improvement-loop.
+#
+# This is a MEASUREMENT job, not an auto-fix job. It runs the loop's mechanical
+# half on a throwaway runner, uploads the artifacts, and never pushes anything.
+# A finding is a starting point for a human, not a patch to merge at 3am.
+name: vibe-forge-nightly
+
+on:
+  schedule:
+    # 03:17 UTC daily. Deliberately off the hour: every scheduled workflow on
+    # the platform fires at :00, and the runner queue is already saturated.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      focus:
+        description: Focus mode
+        type: choice
+        options: [full, design, bugs, perf, a11y, security, seo, frontend, backend, redesign]
+        default: full
+      max_iterations:
+        description: Iteration budget for this run
+        type: string
+        default: '20'
+      min_severity:
+        description: Severity floor — findings below it are not reported
+        type: choice
+        options: [P0, P1, P2, P3]
+        default: P1
+
+permissions:
+  contents: read
+
+concurrency:
+  # One sweep at a time. Two overlapping runs would race on the same artifacts
+  # and double the model spend for a duplicated answer.
+  group: vibe-forge-nightly
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: audit (${{ github.event.inputs.focus || 'full' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      SKILL_DIR: skills/website-improvement-loop
+      FOCUS: ${{ github.event.inputs.focus || 'full' }}
+      MAX_ITERATIONS: ${{ github.event.inputs.max_iterations || '20' }}
+      MIN_SEVERITY: ${{ github.event.inputs.min_severity || 'P1' }}
+      # No agent runner is installed on the runner, so spawn-agents reports an
+      # honest empty result rather than inventing findings. Set the repository
+      # secret AGENT_RUNNER to enable the real audit.
+      WIL_AGENT_RUNNER: ${{ secrets.AGENT_RUNNER }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ${{ env.SKILL_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.SKILL_DIR }}
+        run: npm install --no-audit --no-fund
+
+      - name: Verify the skill itself
+        working-directory: ${{ env.SKILL_DIR }}
+        run: npm run verify
+
+      - name: Run the self-checks
+        working-directory: ${{ env.SKILL_DIR }}
+        run: npm test
+
+      - name: Measure the baseline
+        run: bash $SKILL_DIR/scripts/measure.sh . "nightly-$(date -u +%Y%m%d-%H%M%S)"
+
+      - name: Resolve the focus mode
+        run: node $SKILL_DIR/scripts/focus-resolver.mjs --focus="$FOCUS" --max-iterations="$MAX_ITERATIONS" --min-severity="$MIN_SEVERITY"
+
+      - name: Run the loop
+        id: loop
+        run: |
+          set +e
+          node $SKILL_DIR/scripts/orchestrator.mjs \
+            --project=. \
+            --focus="$FOCUS" \
+            --max-iterations="$MAX_ITERATIONS" \
+            --min-severity="$MIN_SEVERITY" \
+            --dry-run
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "### vibe-forge-nightly"
+            echo
+            echo "- focus: \`$FOCUS\`"
+            echo "- max iterations: \`$MAX_ITERATIONS\`"
+            echo "- severity floor: \`$MIN_SEVERITY\`"
+            echo "- agent runner: \`${WIL_AGENT_RUNNER:-not configured}\`"
+            echo
+            if [ -f artifacts/website-loop/queue-summary.json ]; then
+              echo "Findings by severity:"
+              echo '```'
+              cat artifacts/website-loop/queue-summary.json
+              echo '```'
+            else
+              echo "No queue was produced. With no agent runner configured the loop reports an empty result rather than a fabricated one."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vibe-forge-${{ github.run_id }}
+          path: |
+            artifacts/website-loop/
+            metrics/
+            focus-metrics/
+            FIX-PLAN.md
+            FINAL_REPORT.md
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Fail on a broken skill
+        if: steps.loop.outcome == 'failure'
+        run: |
+          echo "The loop could not run. See the artifact for the error." >&2
+          exit 1

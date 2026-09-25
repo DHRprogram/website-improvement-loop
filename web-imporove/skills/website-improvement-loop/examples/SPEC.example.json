@@ -1,0 +1,45 @@
+{
+  "$comment": "The signed redesign specification. drift-guard compares implementation against this; spec compliance is 15 of the 100 redesign rubric points.",
+  "spec_id": "SPEC-checkout-redesign",
+  "version": "1.2.0",
+  "status": "approved",
+  "approved_by": ["tech-lead", "product-owner"],
+  "approved_at": "2026-09-18T10:00:00Z",
+  "summary": "Replace the checkout page with the new design-system flow, behind a feature flag, without changing the order data contract.",
+  "in_scope": [
+    "Rebuild /checkout using the Button, Input, Select and Card components",
+    "Add inline field validation with error text associated via aria-describedby",
+    "Move the promo-code field below the order summary on mobile",
+    "Add a 3DS challenge step for card payments that require it"
+  ],
+  "out_of_scope": [
+    "Any change to the order data contract",
+    "Payment provider migration",
+    "Cart page redesign",
+    "Multi-currency support beyond the existing USD/EUR/GBP enum"
+  ],
+  "routes": [
+    {
+      "path": "/checkout",
+      "flag": "checkout_redesign",
+      "default": false,
+      "golden_tests": ["tests/golden/checkout-receipt.spec.ts", "tests/golden/checkout-3ds.spec.ts"],
+      "preserves": ["order creation", "idempotency", "3DS challenge", "error copy"]
+    }
+  ],
+  "acceptance": [
+    { "id": "A1", "criterion": "Zero critical axe violations on /checkout", "verified_by": "scripts/user-test/run-axe.mjs" },
+    { "id": "A2", "criterion": "The full keyboard path completes a purchase", "verified_by": "manual + golden test" },
+    { "id": "A3", "criterion": "Order response shape matches DATA_CONTRACT 1.4.0 exactly", "verified_by": "scripts/data-contract-freeze.mjs --diff" },
+    { "id": "A4", "criterion": "Rollback completes in under 5 minutes", "verified_by": "rehearsal in staging" },
+    { "id": "A5", "criterion": "Bundle does not grow beyond baseline", "verified_by": "scripts/measure.sh" }
+  ],
+  "risks": [
+    { "id": "R1", "risk": "3DS challenge regresses on mobile Safari", "mitigation": "golden test covers the challenge; flag defaults off" },
+    { "id": "R2", "risk": "New validation blocks a previously accepted input", "mitigation": "golden test asserts the full valid-input matrix" }
+  ],
+  "metrics": {
+    "primary": "preservation_delta",
+    "target": { "preservation_delta": 0, "a11y_violations": 0 }
+  }
+}

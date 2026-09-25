@@ -73,7 +73,10 @@ After patience expires: log frustration, mark step friction accordingly, try onc
   "dead_ends": ["Had to find password requirements"],
   "top_frustrations": ["No show password toggle"],
   "quote": "I expected to be done in under a minute but the form had too many fields.",
-  "step_log": [...],
+  "step_log": [
+    { "step": 1, "action": "open /signup", "ok": true, "ms": 820 },
+    { "step": 2, "action": "submit empty form", "ok": false, "ms": 240, "friction": 1 }
+  ],
   "attacks": []
 }
 ```

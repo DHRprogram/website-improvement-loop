@@ -1,0 +1,23 @@
+{
+  "mode": "design",
+  "subagents": ["S2", "S3", "S5", "S10"],
+  "primary_metric": "design_system_violations",
+  "primary_direction": "lower",
+  "secondary_metrics": ["spacing_inconsistencies", "typography_violations"],
+  "min_severity": "P2",
+  "min_severity_meaning": "P0 (data loss, auth bypass, money), P1 (core task broken for a large group) and P2 (core task degraded) are queued. P3 polish is not.",
+  "stop_conditions": {
+    "iteration_cap": 10,
+    "no_improvement_streak": 3,
+    "consecutive_errors": 3,
+    "no_findings_above_severity": true,
+    "stop_sentinel": true,
+    "focus_specific": [
+      "Stop when design_system_violations has not decreased for 3 consecutive iterations."
+    ]
+  },
+  "reserved_for_human": [
+    "A redesign cutover is never auto-approved.",
+    "Any finding touching auth, payments or the database schema requires explicit approval."
+  ]
+}

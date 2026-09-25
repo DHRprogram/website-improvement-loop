@@ -1,0 +1,161 @@
+# Redesign gate — the pre-flight check before a strangler migration.
+#
+# workflow_dispatch ONLY. There is deliberately no `push`, no `pull_request`
+# and no `schedule` trigger. A redesign changes routing, and routing that runs
+# unattended against a real deployment is how a migration takes production down
+# at 3am. This workflow measures; a human decides.
+#
+# Nothing here writes to a database, flips a feature flag, or pushes anything.
+name: redesign-gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      route:
+        description: Route under consideration
+        type: string
+        required: true
+      flag:
+        description: Feature flag that would select the new system
+        type: string
+        required: true
+      step:
+        description: Migration step number (1-9, see references/strangler-pattern.md)
+        type: choice
+        options: ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+        default: '1'
+      base_url:
+        description: Base URL of a TEST environment (never production)
+        type: string
+        default: 'http://localhost:3000'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: redesign-gate
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: pre-flight (${{ github.event.inputs.route }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SKILL_DIR: skills/website-improvement-loop
+      ROUTE: ${{ github.event.inputs.route }}
+      FLAG: ${{ github.event.inputs.flag }}
+      STEP: ${{ github.event.inputs.step }}
+      BASE_URL: ${{ github.event.inputs.base_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ${{ env.SKILL_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.SKILL_DIR }}
+        run: npm install --no-audit --no-fund
+
+      - name: Refuse a production base URL
+        run: |
+          if printf '%s' "$BASE_URL" | grep -qiE 'prod|www\.[^./]+\.[a-z]{2,}/?$'; then
+            echo "Refusing to run the redesign gate against '$BASE_URL'." >&2
+            echo "This gate must run against a test environment. Point it at staging," >&2
+            echo "not at the site that is currently serving users." >&2
+            exit 1
+          fi
+          echo "base URL accepted: $BASE_URL"
+
+      - name: Verify the skill itself
+        working-directory: ${{ env.SKILL_DIR }}
+        run: npm run verify
+
+      - name: Run the self-checks
+        working-directory: ${{ env.SKILL_DIR }}
+        run: npm test
+
+      - name: Confirm nothing points at production
+        run: bash $SKILL_DIR/scripts/guards/no-prod-touch.sh .
+
+      - name: Extract the current surface
+        run: node $SKILL_DIR/scripts/spec-extract.mjs --project=. --out artifacts/website-loop/SPEC.json
+
+      - name: Freeze or diff the data contract
+        id: contract
+        continue-on-error: true
+        run: |
+          set +e
+          node $SKILL_DIR/scripts/data-contract-freeze.mjs --project=. --diff
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Capture the behaviour the migration must preserve
+        continue-on-error: true
+        env:
+          WIL_BASE_URL: ${{ env.BASE_URL }}
+        run: node $SKILL_DIR/scripts/preservation-capture.mjs --project=. --base-url="$BASE_URL" --out artifacts/website-loop/PRESERVATION.json
+
+      - name: Golden tests, as they stand
+        continue-on-error: true
+        run: node $SKILL_DIR/scripts/golden-test-runner.mjs --project=. --base-url="$BASE_URL"
+
+      - name: Show the migration plan
+        run: |
+          node $SKILL_DIR/scripts/migrate-route.mjs \
+            --project=. --route="$ROUTE" --flag="$FLAG" --step="$STEP" --dry-run
+
+      - name: Score against the redesign rubric
+        if: always()
+        run: |
+          {
+            echo "### Redesign gate — $ROUTE"
+            echo
+            echo "| Gate | Result |"
+            echo "|---|---|"
+            echo "| Production target | refused if present (see the log) |"
+            echo "| Data contract | exit \`${{ steps.contract.outputs.exit_code }}\` — 0 holds or approved, 1 unapproved breaking change |"
+            echo "| Golden tests | see the log |"
+            echo "| Migration step | $STEP of 9 |"
+            echo
+            echo "A plan is not a decision. This workflow measures; a human decides."
+            echo
+            echo "**To proceed**, a human runs for real:"
+            echo '```'
+            echo "node scripts/migrate-route.mjs --project=. --route=$ROUTE --flag=$FLAG --step=$STEP --yes"
+            echo '```'
+            echo
+            echo "Rollback (SLA under 5 seconds):"
+            echo '```'
+            echo "node scripts/rollback.mjs --project=. --route=$ROUTE --reason=\"<why>\""
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redesign-gate-${{ github.run_id }}
+          path: |
+            artifacts/website-loop/
+            metrics/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Report an unapproved breaking contract change
+        # The contract is the one gate whose failure genuinely blocks: a
+        # breaking change without an approval record must not be waved through
+        # on the grounds that the redesign "needed" it.
+        if: steps.contract.outputs.exit_code == '1'
+        run: |
+          echo "The data contract has a breaking change with no approval." >&2
+          echo "Record one in artifacts/website-loop/APPROVALS.json, or revert the change." >&2
+          exit 1

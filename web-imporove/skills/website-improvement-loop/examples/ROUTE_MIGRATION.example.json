@@ -1,0 +1,73 @@
+{
+  "$comment": "Written by scripts/migrate-route.mjs. One file per migrated route, appended to, never rewritten — the history of a migration is the record of how it went.",
+  "project": "acme-storefront",
+  "contract_version": "1.4.0",
+  "migrations": [
+    {
+      "route": "/about",
+      "flag": "about_new",
+      "step": 1,
+      "state": "migrated",
+      "started_at": "2026-09-20T09:00:00Z",
+      "completed_at": "2026-09-20T09:14:00Z",
+      "kind": "read_only",
+      "writes_data": false,
+      "golden_tests": ["tests/golden/about.spec.ts"],
+      "golden_result": { "passed": 1, "failed": 0, "skipped": 0 },
+      "preservation": { "delta": 0, "compared_fields": ["title", "body", "links"], "mismatches": [] },
+      "flag_audit": [
+        { "from": false, "to": true, "actor": "loop:20260925T081400Z", "reason": "golden tests pass, preservation delta 0", "at": "2026-09-20T09:12:00Z" }
+      ],
+      "rollback": {
+        "method": "flag_flip",
+        "command": "node scripts/rollback.mjs --project=. --route /about",
+        "sla_seconds": 5,
+        "rehearsed": true,
+        "rehearsed_at": "2026-09-20T09:14:00Z"
+      }
+    },
+    {
+      "route": "/checkout",
+      "flag": "checkout_redesign",
+      "step": 5,
+      "state": "rolled_back",
+      "started_at": "2026-09-25T08:40:00Z",
+      "completed_at": "2026-09-25T08:58:00Z",
+      "kind": "write_single_write",
+      "writes_data": true,
+      "golden_tests": ["tests/golden/checkout-receipt.spec.ts", "tests/golden/checkout-3ds.spec.ts"],
+      "golden_result": { "passed": 1, "failed": 1, "skipped": 0, "failed_test": "checkout-3ds.spec.ts" },
+      "failure": {
+        "diff": [
+          { "kind": "removed", "path": "3ds.iframe", "detail": "challenge iframe never mounted in the new step component" }
+        ],
+        "classification": "unintended_regression"
+      },
+      "preservation": { "delta": 1, "compared_fields": ["challenge_mounted", "error_copy", "order_shape"], "mismatches": ["challenge_mounted"] },
+      "flag_audit": [
+        { "from": false, "to": true, "actor": "loop:20260925T081400Z", "reason": "migration step 5", "at": "2026-09-25T08:41:00Z" },
+        { "from": true, "to": false, "actor": "loop:20260925T081400Z", "reason": "golden test checkout-3ds.spec.ts failed; 3DS iframe not mounted", "at": "2026-09-25T08:57:00Z" }
+      ],
+      "data_reconciliation": {
+        "required": true,
+        "performed": true,
+        "new_store_authoritative": false,
+        "old_store_authoritative": true,
+        "orders_written_during_window": 0,
+        "contract_diff": "clean against 1.4.0"
+      },
+      "rollback": {
+        "method": "flag_flip",
+        "command": "node scripts/rollback.mjs --project=. --route /checkout --reason \"3DS regression\"",
+        "sla_seconds": 5,
+        "actual_seconds": 41,
+        "rehearsed": true,
+        "rehearsed_at": "2026-09-22T14:00:00Z"
+      },
+      "lesson": "The 3DS step was rebuilt as a component that mounts its iframe in an effect, which the golden test caught and a screenshot would not have. Pin challenge_mounted in the golden test permanently."
+    }
+  ],
+  "order_enforced": true,
+  "next_allowed_step": 5,
+  "blocked_until": ["checkout-3ds.spec.ts passes without a snapshot update"]
+}

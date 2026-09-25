@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/website-improvement-loop/finding-schema.json",
+  "title": "Website Improvement Finding",
+  "description": "Schema for every finding produced by the S1-S10 auditors. One shape for every agent, so merge-findings.mjs, rank-findings.mjs and the orchestrator never have to special-case a source.",
+  "type": "object",
+  "required": [
+    "id",
+    "agent",
+    "severity",
+    "title",
+    "evidence",
+    "impact",
+    "effort",
+    "fix_sketch",
+    "metric",
+    "files_touched",
+    "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^F-[A-Z0-9]{2}-[0-9]{4}$",
+      "description": "Unique finding id. The two characters are the agent, e.g. F-S8-0001."
+    },
+    "agent": {
+      "type": "string",
+      "enum": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"],
+      "description": "The auditor that produced this finding."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["P0", "P1", "P2", "P3"],
+      "description": "P0 blocking (1000), P1 critical (300), P2 major (100), P3 minor (30). Drives the priority weight."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 120,
+      "description": "Short imperative title. Normalized titles are part of the dedupe key, so reword the same defect consistently across agents."
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "description": "At least one item. A finding with no file:line or no command output is a guess, not a finding.",
+      "items": {
+        "type": "object",
+        "required": ["file", "line", "snippet", "measurement"],
+        "additionalProperties": false,
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Path relative to the project root. The first entry becomes part of the dedupe key."
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "1-indexed line number. Use 1 with a file-level measurement such as a whole-file count."
+          },
+          "snippet": {
+            "type": "string",
+            "description": "The offending code, trimmed. Never paste a secret or a whole file."
+          },
+          "measurement": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The quantified observation: '14 call sites', 'axe: color-contrast, 6 nodes', '412 kB gzip'."
+          }
+        }
+      }
+    },
+    "impact": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "User or business impact. 1 cosmetic, 5 data loss, security hole or an unusable main flow."
+    },
+    "effort": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Fix effort. S=1, M=3, L=5."
+    },
+    "fix_sketch": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 600,
+      "description": "The approach in a sentence or two. Not the diff."
+    },
+    "metric": {
+      "type": "object",
+      "description": "The single number this fix must move. One metric per finding keeps before/after honest.",
+      "required": ["name", "before", "after_null_ok", "unit"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Metric key, e.g. bundle_kb, axe_critical, runtime_errors."
+        },
+        "before": {
+          "type": "number",
+          "description": "The measured value now. A number you actually observed, never an estimate."
+        },
+        "after_null_ok": {
+          "type": ["number", "null"],
+          "description": "The value after the fix, or null until it is applied. Null means unmeasured, not zero."
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "count, kB, ms, score, occurrences."
+        }
+      }
+    },
+    "files_touched": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Files the fix would change. The first is the dedupe key; list the primary file first.",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "queued", "in_progress", "fixed", "reverted", "blocked_backend"],
+      "description": "blocked_backend means the fix needs a server, database or schema change and is out of scope for a frontend loop."
+    },
+    "reported_by": {
+      "type": "array",
+      "description": "Set by merge-findings.mjs when several agents reported the same defect. Do not write this yourself.",
+      "items": { "type": "string" }
+    }
+  }
+}

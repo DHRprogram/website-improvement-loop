@@ -1,0 +1,112 @@
+{
+  "$comment": "Snapshot produced by `node scripts/data-contract-freeze.mjs`. Committed, and enforced by scripts/guards/no-schema-change.sh.",
+  "contract_version": "1.4.0",
+  "frozen_at": "2026-09-25T08:14:00Z",
+  "project": "acme-storefront",
+  "conventions": {
+    "field_naming": "camelCase",
+    "null_explicit": true,
+    "enum_unknown_handling": "consumers must ignore unrecognised values",
+    "additional_properties": false
+  },
+  "endpoints": [
+    {
+      "id": "GET /api/orders/:id",
+      "auth": "session",
+      "roles": ["customer", "admin"],
+      "responses": {
+        "200": {
+          "schema": {
+            "type": "object",
+            "required": ["id", "total", "currency", "status", "items", "created_at"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^ord_[a-z0-9]{16}$" },
+              "total": { "type": "number" },
+              "currency": { "type": "string", "enum": ["USD", "EUR", "GBP"] },
+              "status": { "type": "string", "enum": ["pending", "paid", "refunded", "cancelled"] },
+              "customer_note": { "type": ["string", "null"] },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["sku", "qty", "unit_price"],
+                  "properties": {
+                    "sku": { "type": "string" },
+                    "qty": { "type": "integer", "minimum": 1 },
+                    "unit_price": { "type": "number" },
+                    "gift_wrap": { "type": "boolean" }
+                  }
+                }
+              },
+              "created_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "404": { "$ref": "#/definitions/error" },
+        "401": { "$ref": "#/definitions/error" }
+      }
+    },
+    {
+      "id": "POST /api/orders",
+      "auth": "session",
+      "roles": ["customer"],
+      "request": {
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["sku", "qty"],
+              "properties": {
+                "sku": { "type": "string" },
+                "qty": { "type": "integer", "minimum": 1 },
+                "note": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "coupon_code": { "type": ["string", "null"] },
+          "idempotency_key": { "type": "string" }
+        }
+      },
+      "responses": {
+        "201": { "$ref": "#/definitions/order_summary" },
+        "422": { "$ref": "#/definitions/error" }
+      }
+    }
+  ],
+  "definitions": {
+    "error": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" },
+            "fields": { "type": ["object", "null"] }
+          }
+        }
+      }
+    },
+    "order_summary": {
+      "type": "object",
+      "required": ["id", "total", "currency", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "total": { "type": "number" },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "paid"] }
+      }
+    }
+  },
+  "breaking_changes_require": {
+    "version_bump": "major",
+    "justification": "docs/contracts/CHANGELOG.md",
+    "approval_record": "artifacts/website-loop/APPROVALS.json",
+    "migration_plan": "required when existing data is affected"
+  }
+}

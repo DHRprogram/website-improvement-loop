@@ -28,15 +28,20 @@ Each pitch must be at most 12 lines in the following format:
 [3–6 line ASCII mockup of the key UI change]
 ```
 
-### Rules
-
-6. **Build cost estimate** is required: estimate LLM token cost (e.g. ~$8 for small UI change, ~$35 for new page with tests).
-   Break down: $X implementation + $Y testing + $Z QA. Helps decide build vs defer.
-   If under $5, label "trivial" — these batch into a single commit.
-
+## Rules
 
 1. Write in the language of the user (developer language).
 2. Every pitch must reference at least one Phase B finding. If none, explain why with "(No Phase B evidence — [reason])".
 3. Success metric must be measurable: conversion %, retention %, load time ms, etc.
 4. "Touches" must be accurate. If wrong, the pitch is rejected.
 5. Merge overlapping ideas into one pitch. Group by theme.
+
+## Build Cost Estimate
+
+Every pitch also carries an estimated LLM token cost, broken down as
+$X implementation + $Y testing + $Z QA. It decides build vs. defer, and it is
+what lets a Phase C batch commit several trivial ideas at once.
+
+- small UI change: ~\$8
+- new page with tests: ~\$35
+- under \$5: label the pitch **trivial** — these batch into a single commit

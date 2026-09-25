@@ -1,0 +1,52 @@
+{
+  "$comment": "Written by scripts/rollback.mjs on every rollback. This is the record that answers 'what did we turn off, when, and why' during an incident.",
+  "rollback_id": "rb-20260925T085700Z",
+  "project": "acme-storefront",
+  "executed_at": "2026-09-25T08:57:12Z",
+  "actor": "loop:20260925T081400Z",
+  "reason": "golden test checkout-3ds.spec.ts failed after migration step 5; 3DS challenge iframe not mounted",
+  "trigger": "golden_test_failure",
+  "method": "flag_flip",
+  "targets": [
+    {
+      "route": "/checkout",
+      "flag": "checkout_redesign",
+      "previous_value": true,
+      "new_value": false,
+      "flipped": true,
+      "effective_at": "2026-09-25T08:57:12Z",
+      "propagation_delay_seconds": 3
+    }
+  ],
+  "not_reverted": [
+    { "route": "/about", "flag": "about_new", "value": true, "reason": "passed its golden tests and its preservation delta is 0" }
+  ],
+  "timings": {
+    "detected_at": "2026-09-25T08:55:40Z",
+    "rollback_started_at": "2026-09-25T08:57:12Z",
+    "rollback_completed_at": "2026-09-25T08:57:53Z",
+    "total_seconds": 101,
+    "sla_seconds": 300,
+    "within_sla": true
+  },
+  "verification": {
+    "error_rate_before": { "value": 0.042, "unit": "ratio" },
+    "error_rate_after": { "value": 0.001, "unit": "ratio" },
+    "p95_ms_before": { "value": 1840, "unit": "ms" },
+    "p95_ms_after": { "value": 610, "unit": "ms" },
+    "recovered": true
+  },
+  "data_reconciliation": {
+    "required": true,
+    "reason": "the route writes orders",
+    "contract_diff": "clean",
+    "orders_written_during_window": 0,
+    "authoritative_store": "legacy",
+    "outstanding_actions": []
+  },
+  "follow_up": {
+    "state_update": "node scripts/state-manager.mjs update --error --add-lesson \"reverted /checkout: 3DS iframe not mounted by the new step component\"",
+    "next_route_authorized": false,
+    "blocked_by": ["tests/golden/checkout-3ds.spec.ts"]
+  }
+}

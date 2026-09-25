@@ -34,7 +34,7 @@ async function main() {
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   console.log('Saved to .claude/settings.json');
 
-  console.log('\nDone. Run /improve-site to start.\n');
+  console.log('\nDone. Run /web-improvement-loop:full to start.\n');
   rl.close();
 }
 main().catch(e => { console.error(e); rl.close(); process.exit(1); });

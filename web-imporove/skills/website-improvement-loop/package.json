@@ -1,25 +1,35 @@
 {
   "name": "website-improvement-loop",
-  "version": "0.1.0",
-  "description": "Audit, improve, test, ideate, and build website features with quality bar enforcement",
+  "version": "0.2.0",
+  "description": "A 10-agent parallel website improvement loop: audit, improve over measurable iterations, test with synthetic users, pitch product features, and build the approved ones",
   "license": "MIT",
   "type": "module",
-  "scripts": {
-    "verify": "npm run lint:json && npm run lint:bash && npm run lint:mjs",
-    "test:aggregate": "node scripts/user-test/aggregate-findings.mjs",
-    "test:axe": "node scripts/user-test/run-axe.mjs",
-    "test:baseline-save": "node scripts/user-test/baseline-save.mjs",
-    "test:baseline-check": "node scripts/user-test/baseline-check.mjs",
-    "lint:json": "for f in $(find . -name '*.json' -not -path './node_modules/*'); do node -e \"JSON.parse(require('fs').readFileSync('$f'))\" || exit 1; done",
-    "lint:bash": "for f in $(find . -name '*.sh' -not -path './node_modules/*'); do bash -n \"$f\" || exit 1; done",
-    "lint:mjs": "for f in $(find . -name '*.mjs' -not -path './node_modules/*'); do node --check \"$f\" || exit 1; done"
-  },
-  "devDependencies": {
-    "playwright": "^1.48.0",
-    "@axe-core/playwright": "^4.10.0",
-    "@playwright/test": "^1.48.0"
-  },
   "engines": {
     "node": ">=18"
+  },
+  "scripts": {
+    "verify": "npm run lint:json && npm run lint:bash && npm run lint:mjs",
+    "loop": "node scripts/orchestrator.mjs",
+    "loop:unattended": "node scripts/run-loop.mjs",
+    "state": "node scripts/state-manager.mjs",
+    "focus": "node scripts/focus-resolver.mjs --list",
+    "metrics": "bash scripts/measure.sh",
+    "test:merge": "node scripts/merge-findings.mjs --dry-run",
+    "test:rank": "node scripts/rank-findings.mjs --dry-run",
+    "test:spawn": "node scripts/spawn-agents.mjs --dry-run",
+    "test:state": "node scripts/state-manager.mjs read",
+    "test:measure": "bash scripts/test-measure.sh",
+    "test:stop-hook": "bash scripts/test-stop-hook.sh",
+    "test:guards": "bash scripts/test-guards.sh",
+    "lint:json": "node -e \"const{readdirSync,readFileSync,statSync}=require('fs');const{join}=require('path');(function walk(d){for(const e of readdirSync(d,{withFileTypes:true})){if(e.name==='node_modules'||e.name==='.git')continue;const p=join(d,e.name);if(e.isDirectory())walk(p);else if(p.endsWith('.json')){JSON.parse(readFileSync(p,'utf8'));console.log('  ok '+p);}}})('.')\"",
+    "lint:bash": "for f in $(find . -name '*.sh' -not -path './node_modules/*'); do bash -n \"$f\" || exit 1; done; echo '  all .sh parsed'",
+    "lint:mjs": "for f in $(find . -name '*.mjs' -not -path './node_modules/*'); do node --check \"$f\" || exit 1; done; echo '  all .mjs parsed'",
+    "test:report": "bash scripts/test-report.sh",
+    "test": "npm run test:stop-hook && npm run test:guards && npm run test:measure && npm run test:report && npm run test:migration",
+    "test:migration": "bash scripts/test-migration.sh"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "playwright": "^1.48.0"
   }
 }
