@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const strict = process.argv.includes('--strict');
@@ -15,7 +15,7 @@ const THRESHOLDS = {
 const aggDir = resolve('artifacts/USER_TEST');
 const basePath = resolve('artifacts/BASELINE.json');
 const aggPath = join(aggDir, 'AGGREGATE.json');
-const axePath = join(aggDir, '..', 'axe', 'summary.json');
+const axePath = join(aggDir, 'axe', 'summary.json');
 
 if (!existsSync(basePath)) { console.error('Missing BASELINE.json'); process.exit(2); }
 if (!existsSync(aggPath)) { console.error('Missing AGGREGATE.json'); process.exit(2); }
@@ -113,12 +113,16 @@ const mdPath = resolve('artifacts/REGRESSION_REPORT.md');
 writeFileSync(mdPath, md);
 console.log(md);
 
-// Webhook notification
+// Webhook notification (Node 18+ global fetch — no child_process needed)
 if (fails.length > 0) {
   const wh = process.env.SLACK_WEBHOOK || process.env.TELEGRAM_WEBHOOK;
-  if (wh && wh.includes("hooks.slack")) {
-    const payload = JSON.stringify({text: "Regression FAIL: " + fails.join("; ")});
-    try { execSync("curl", ["-sf", "-X", "POST", "-H", "Content-Type: application/json", "-d", payload, wh]); } catch(e) {}
+  if (wh) {
+    const text = 'Regression FAIL: ' + fails.join('; ');
+    const payload = wh.includes('hooks.slack')
+      ? JSON.stringify({ text })
+      : JSON.stringify({ text }); // Telegram bot API also accepts { text } via sendMessage-style webhooks
+    fetch(wh, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload })
+      .catch(() => {});
   }
 }
 if (fails.length > 0) process.exit(1);

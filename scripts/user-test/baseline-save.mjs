@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 
 const tag = process.argv[2] || new Date().toISOString().slice(0, 10);
 const project = process.argv[3] || process.env.BASELINE_PROJECT || 'default';
 const projDir = `.claude/baselines/` + project;
-require('fs').mkdirSync(projDir, { recursive: true });
+mkdirSync(projDir, { recursive: true });
 const aggDir = resolve('artifacts/USER_TEST');
 const axeDir = resolve('artifacts/USER_TEST/axe');
 
@@ -45,7 +45,13 @@ const baseline = {
   issue_keys: (agg.top_issues || []).slice(0, 60).map(i => i.page.toLowerCase().replace(/[^a-z0-9]/g, '-') + '::' + i.issue.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 40))
 };
 
+// Write both locations: the per-project baseline (multi-project support)
+// and artifacts/BASELINE.json, which baseline-check.mjs and SKILL.md B7 use.
 const outPath = resolve(projDir + '/BASELINE.json');
-writeFileSync(outPath, JSON.stringify(baseline, null, 2));
-console.log('[OK] BASELINE.json at ' + outPath);
+const json = JSON.stringify(baseline, null, 2);
+writeFileSync(outPath, json);
+mkdirSync(resolve('artifacts'), { recursive: true });
+const artifactPath = resolve('artifacts/BASELINE.json');
+writeFileSync(artifactPath, json);
+console.log('[OK] BASELINE.json at ' + outPath + ' and ' + artifactPath);
 console.log('Tag: ' + tag + ' | Git: ' + gitSha);

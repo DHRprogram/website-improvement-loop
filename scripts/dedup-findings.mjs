@@ -36,7 +36,6 @@ for (let i = 0; i < issues.length; i++) {
     }
   }
   if (group.length > 1) {
-    const allSeverities = group.flatMap(g => [g.worst_severity, ...(g.personas || [])]);
     const worst = [...'P0P1P2P3'].find(s => group.some(g => g.worst_severity === s)) || 'P3';
     const personas = [...new Set(group.flatMap(g => g.personas || []))];
     merged.push({

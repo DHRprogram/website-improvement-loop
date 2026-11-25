@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase D — Approval: User review gate with explicit approval before building
 - Phase E — Build: Build approved ideas to Product Quality Bar with verification loop
 - Regression Guard: CI gate that prevents metric degradation
-- AUXILIARY_BASELINE.md: Project reconnaissance and baseline scoring
+- AUDIT_BASELINE.md: Project reconnaissance and baseline scoring
 - IMPROVEMENT_LOG.md: Append-only log of all changes across iterations
 - IDEA_BACKLOG.md: Backlog of all ideas generated
 - IDEA_PITCHES.md: Formatted pitches ready for user review
@@ -43,5 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - examples/persona-11.example.json: Example adversarial persona output
 - examples/BASELINE.example.json: Example baseline file
 - .mcp.json: Sample MCP server configuration
-- .github/workflows/regression.yml: CI workflow for regression gate
+- examples/github-workflow.yml: CI workflow template for the regression gate (copy into .github/workflows/)
+- .github/workflows/ci.yml: CI for this repo — lint + smoke tests on every push/PR
+- scripts/smoke-test.mjs: Browserless smoke tests for the data pipeline (`npm test`)
 - .claude/commands/improve-site.md: Claude Code slash command

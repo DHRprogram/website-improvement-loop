@@ -113,8 +113,8 @@ Run a deep analysis on a single URL. 20 iterations (vs 10), 4 personas focused o
 ### B0 Prerequisites
 
 #### --resume flag
-Pass  to continue from the last checkpoint instead of starting Phase B from scratch.
-Checkpoints saved in  after each persona.
+Pass `--resume` to continue from the last checkpoint instead of starting Phase B from scratch.
+Checkpoints saved in `checkpoints/` after each persona.
 Resume restores: completed personas list, current persona index, task progress.
 
 

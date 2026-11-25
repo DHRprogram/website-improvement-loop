@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "verify": "npm run lint:json && npm run lint:bash && npm run lint:mjs",
+    "test": "node scripts/smoke-test.mjs",
+    "test:smoke": "node scripts/smoke-test.mjs",
     "test:aggregate": "node scripts/user-test/aggregate-findings.mjs",
     "test:axe": "node scripts/user-test/run-axe.mjs",
     "test:baseline-save": "node scripts/user-test/baseline-save.mjs",
