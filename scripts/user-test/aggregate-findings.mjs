@@ -93,7 +93,7 @@ const topAttacks = allAttacks.sort((a, b) => (attackRankVal[b.severity] || 0) - 
 
 let a11y = null;
 try {
-  const axePath = join(dir, '..', 'axe', 'summary.json');
+  const axePath = join(dir, 'axe', 'summary.json');
   if (existsSync(axePath)) a11y = JSON.parse(readFileSync(axePath, 'utf8'));
 } catch (e) { console.error('axe read error: ' + e.message); }
 

@@ -30,5 +30,6 @@ if [ -n "$OLD_SCORE" ] && [ "$NEW_SCORE" -gt "$((OLD_SCORE + 10))" ]; then
 else
   echo "==> Score stable: $OLD_SCORE → $NEW_SCORE"
 fi
+mkdir -p ".claude/baselines/${PROJECT}"
 echo "$NEW_SCORE" > ".claude/baselines/${PROJECT}/score.txt"
 echo "==> Cron check done"

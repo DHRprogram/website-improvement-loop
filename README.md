@@ -70,14 +70,17 @@ Add to your settings:
 - Slack/Telegram webhooks for P0 alerts
 - Multi-project baseline support
 - Auto-revert on score regression
+- Lint + browserless smoke tests via `npm run verify` / `npm test`, with GitHub Actions CI (`.github/workflows/ci.yml`)
 
 ## Files
 
 ```
-39 files in the skill directory:
-  SKILL.md, README.md, LICENSE, CHANGELOG.md, .gitignore, package.json, .mcp.json, install.sh
+42 files in the skill directory:
+  SKILL.md, README.md, LICENSE, CHANGELOG.md, .gitignore, .mcp.json, package.json, package-lock.json, install.sh
+  .github/workflows/ci.yml (lint + smoke tests on every push/PR)
   commands/improve-site.md
   scripts/measure.sh, scripts/trend-chart.mjs, scripts/init.mjs, scripts/html-report.mjs
+  scripts/smoke-test.mjs (npm test — browserless data-pipeline tests)
   scripts/dedup-findings.mjs, scripts/changelog-gen.mjs, scripts/visual-diff.mjs, scripts/form-fuzzer.mjs, scripts/cron-check.sh
   scripts/ci/regression-gate.sh
   scripts/user-test/aggregate-findings.mjs, run-axe.mjs, baseline-save.mjs, baseline-check.mjs, findings.schema.json

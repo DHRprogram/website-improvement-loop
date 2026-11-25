@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { execSync } from 'node:child_process';
 
 const ROUTES = (process.env.ROUTES || '/').split(',').map(s => s.trim());
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
@@ -11,14 +10,16 @@ mkdirSync(OUT, { recursive: true });
 const beforeDir = resolve(OUT + '/before');
 mkdirSync(beforeDir, { recursive: true });
 
-// Check if pixelmatch is available
-let pixelmatch = null;
-try { pixelmatch = require.resolve('pixelmatch'); } catch (e) { 
-  console.log('[VISUAL-DIFF] pixelmatch not installed — run: npm i -D pixelmatch');
+// Check if pixelmatch is available (ESM-safe: dynamic import, not require.resolve)
+let pixelmatchFn = null;
+let PNG = null;
+try {
+  ({ default: pixelmatchFn } = await import('pixelmatch'));
+  ({ PNG } = await import('pngjs'));
+} catch (e) {
+  console.log('[VISUAL-DIFF] pixelmatch/pngjs not installed — run: npm i -D pixelmatch pngjs');
   process.exit(0);
 }
-const { default: pixelmatchFn } = await import('pixelmatch');
-const { PNG } = await import('pngjs');
 
 async function main() {
   const { chromium } = await import('playwright');

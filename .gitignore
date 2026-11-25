@@ -1,6 +1,7 @@
 node_modules/
 metrics/
-artifacts/
+artifacts/*
+!artifacts/BASELINE.json
 axe/
 shots/
 .env*

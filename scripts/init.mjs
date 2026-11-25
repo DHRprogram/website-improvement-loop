@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 
@@ -27,6 +27,7 @@ async function main() {
   console.log('Created .env');
 
   const claudeDir = resolve('.claude');
+  mkdirSync(claudeDir, { recursive: true });
   const settingsPath = join(claudeDir, 'settings.json');
   let settings = {};
   if (existsSync(settingsPath)) settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
